@@ -15,6 +15,100 @@ import {
   sameDay,
 } from "./utils.js";
 
+// ============================================================================
+// STYLING CONFIGURATION
+// Customize colors, fonts, and other visual properties here
+// ============================================================================
+const STYLE_CONFIG = {
+  // Box Title (Contributions, Streaks)
+  title: {
+    color: "#24292f",
+    fontFamily: "Segoe UI",
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 24,
+  },
+
+  // Stat Values (large numbers: 800, 45, etc.)
+  value: {
+    color: "#2BD853",
+    fontFamily: "Segoe UI",
+    fontSize: 24,
+    fontWeight: "600",
+    lineHeight: 30,
+  },
+
+  // Stat Labels (Total, This week, Best day, etc.)
+  label: {
+    color: "#ffffff",
+    fontFamily: "Segoe UI",
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+
+  // Subtext (date ranges: Jan 1 → Dec 31)
+  subtext: {
+    color: "#b7bdc8",
+    fontFamily: "Segoe UI",
+    fontSize: 12,
+    fontWeight: "400",
+    lineHeight: 18,
+  },
+
+  // Average text ("Average:")
+  averageText: {
+    color: "#24292f",
+    fontFamily: "Segoe UI",
+    fontSize: 12,
+    fontWeight: "400",
+  },
+
+  // Average value (the number)
+  averageValue: {
+    color: "#2ea043",
+    fontFamily: "Segoe UI",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Average unit ("/ day")
+  averageUnit: {
+    color: "#57606a",
+    fontFamily: "Segoe UI",
+    fontSize: 12,
+    fontWeight: "400",
+  },
+
+  // Box styling
+  box: {
+    backgroundColor: "rgba(22, 27, 34, 0.6)",
+    borderColor: "rgba(48, 54, 61, 0.6)",
+    borderWidth: 1,
+    borderRadius: 8,
+    shadowColor: "rgba(0, 0, 0, 0.4)",
+    shadowBlur: 10,
+    shadowOffsetX: 0,
+    shadowOffsetY: 3,
+  },
+
+  // Dimensions
+  dimensions: {
+    contributionsBoxWidth: 370,
+    contributionsBoxHeight: 90,
+    streaksBoxWidth: 270,
+    streaksBoxHeight: 80,
+    titleHeight: 24,
+    averageBottomMargin: 16,
+  },
+};
+
+// Helper function to create font string
+function getFontString(style) {
+  return `${style.fontWeight} ${style.fontSize}px "${style.fontFamily}", sans-serif`;
+}
+// ============================================================================
+
 // Get directory paths
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fontsDir = join(__dirname, "..", "fonts");
@@ -313,28 +407,28 @@ export function renderWithStats(days, options = {}) {
  * @param {number} y - Y position
  */
 function drawContributionsBox(ctx, stats, x, y) {
-  const boxWidth = 370;
-  const boxHeight = 90;
-  const titleHeight = 24;
+  const boxWidth = STYLE_CONFIG.dimensions.contributionsBoxWidth;
+  const boxHeight = STYLE_CONFIG.dimensions.contributionsBoxHeight;
+  const titleHeight = STYLE_CONFIG.dimensions.titleHeight;
 
-  // Title (outside, above the box)
-  ctx.fillStyle = "#74b9ff";
-  ctx.font = '16px "Segoe UI", sans-serif';
-  ctx.fillText("Contributions", x + 14, y + 16);
+  // Title (outside, above the box) - aligned with left border of box
+  ctx.fillStyle = STYLE_CONFIG.title.color;
+  ctx.font = getFontString(STYLE_CONFIG.title);
+  ctx.fillText("Contributions", x, y + 16);
 
   // Box starts below title
   const boxY = y + titleHeight;
 
   // Drop shadow
-  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 3;
+  ctx.shadowColor = STYLE_CONFIG.box.shadowColor;
+  ctx.shadowBlur = STYLE_CONFIG.box.shadowBlur;
+  ctx.shadowOffsetX = STYLE_CONFIG.box.shadowOffsetX;
+  ctx.shadowOffsetY = STYLE_CONFIG.box.shadowOffsetY;
 
   // Box background (transparent/semi-transparent)
-  ctx.fillStyle = "rgba(22, 27, 34, 0.6)";
+  ctx.fillStyle = STYLE_CONFIG.box.backgroundColor;
   ctx.beginPath();
-  ctx.roundRect(x, boxY, boxWidth, boxHeight, 8);
+  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius);
   ctx.fill();
 
   // Reset shadow
@@ -344,8 +438,8 @@ function drawContributionsBox(ctx, stats, x, y) {
   ctx.shadowOffsetY = 0;
 
   // Border
-  ctx.strokeStyle = "rgba(48, 54, 61, 0.6)";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = STYLE_CONFIG.box.borderColor;
+  ctx.lineWidth = STYLE_CONFIG.box.borderWidth;
   ctx.stroke();
 
   // Stats row
@@ -384,27 +478,31 @@ function drawContributionsBox(ctx, stats, x, y) {
     itemY,
   );
 
-  // Average (bottom right)
-  const avgY = boxY + boxHeight - 10;
-  ctx.fillStyle = "#7d8590";
-  ctx.font = '10px "Segoe UI", sans-serif';
+  // Average (outside, below the box, right-aligned)
+  const avgY = boxY + boxHeight + STYLE_CONFIG.dimensions.averageBottomMargin;
+  ctx.fillStyle = STYLE_CONFIG.averageText.color;
+  ctx.font = getFontString(STYLE_CONFIG.averageText);
   const avgText = "Average:";
   const avgNumText = stats.averageCount.toString();
   const dayText = "/ day";
 
   const dayWidth = ctx.measureText(dayText).width;
+  ctx.font = getFontString(STYLE_CONFIG.averageValue);
   const numWidth = ctx.measureText(avgNumText).width;
+  ctx.font = getFontString(STYLE_CONFIG.averageText);
   const avgWidth = ctx.measureText(avgText).width;
 
   const totalWidth = avgWidth + 4 + numWidth + 4 + dayWidth;
-  const startX = x + boxWidth - totalWidth - 14;
+  const startX = x + boxWidth - totalWidth;
 
   ctx.fillText(avgText, startX, avgY);
 
-  ctx.fillStyle = "#2ea043";
+  ctx.fillStyle = STYLE_CONFIG.averageValue.color;
+  ctx.font = getFontString(STYLE_CONFIG.averageValue);
   ctx.fillText(avgNumText, startX + avgWidth + 4, avgY);
 
-  ctx.fillStyle = "#7d8590";
+  ctx.fillStyle = STYLE_CONFIG.averageUnit.color;
+  ctx.font = getFontString(STYLE_CONFIG.averageUnit);
   ctx.fillText(dayText, startX + avgWidth + 4 + numWidth + 4, avgY);
 }
 
@@ -416,28 +514,28 @@ function drawContributionsBox(ctx, stats, x, y) {
  * @param {number} y - Y position
  */
 function drawStreaksBox(ctx, stats, x, y) {
-  const boxWidth = 270;
-  const boxHeight = 80;
-  const titleHeight = 24;
+  const boxWidth = STYLE_CONFIG.dimensions.streaksBoxWidth;
+  const boxHeight = STYLE_CONFIG.dimensions.streaksBoxHeight;
+  const titleHeight = STYLE_CONFIG.dimensions.titleHeight;
 
-  // Title (outside, above the box)
-  ctx.fillStyle = "#74b9ff";
-  ctx.font = '16px "Segoe UI", sans-serif';
-  ctx.fillText("Streaks", x + 14, y + 16);
+  // Title (outside, above the box) - aligned with left border of box
+  ctx.fillStyle = STYLE_CONFIG.title.color;
+  ctx.font = getFontString(STYLE_CONFIG.title);
+  ctx.fillText("Streaks", x, y + 16);
 
   // Box starts below title
   const boxY = y + titleHeight;
 
   // Drop shadow
-  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 3;
+  ctx.shadowColor = STYLE_CONFIG.box.shadowColor;
+  ctx.shadowBlur = STYLE_CONFIG.box.shadowBlur;
+  ctx.shadowOffsetX = STYLE_CONFIG.box.shadowOffsetX;
+  ctx.shadowOffsetY = STYLE_CONFIG.box.shadowOffsetY;
 
   // Box background (transparent/semi-transparent)
-  ctx.fillStyle = "rgba(22, 27, 34, 0.6)";
+  ctx.fillStyle = STYLE_CONFIG.box.backgroundColor;
   ctx.beginPath();
-  ctx.roundRect(x, boxY, boxWidth, boxHeight, 8);
+  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius);
   ctx.fill();
 
   // Reset shadow
@@ -447,8 +545,8 @@ function drawStreaksBox(ctx, stats, x, y) {
   ctx.shadowOffsetY = 0;
 
   // Border
-  ctx.strokeStyle = "rgba(48, 54, 61, 0.6)";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = STYLE_CONFIG.box.borderColor;
+  ctx.lineWidth = STYLE_CONFIG.box.borderWidth;
   ctx.stroke();
 
   // Stats row
@@ -495,20 +593,20 @@ function drawStreaksBox(ctx, stats, x, y) {
  * @param {number} y - Y position
  */
 function drawFlexStatItem(ctx, value, label, subtext, x, y) {
-  // Value (24px, weight 600, green)
-  ctx.fillStyle = "#2BD853";
-  ctx.font = '600 24px "Segoe UI", sans-serif';
+  // Value (large number)
+  ctx.fillStyle = STYLE_CONFIG.value.color;
+  ctx.font = getFontString(STYLE_CONFIG.value);
   ctx.fillText(value, x, y + 22);
 
-  // Label (12px, weight 600, white)
-  ctx.fillStyle = "#ffffff";
-  ctx.font = '600 12px "Segoe UI", sans-serif';
+  // Label (Total, This week, etc.)
+  ctx.fillStyle = STYLE_CONFIG.label.color;
+  ctx.font = getFontString(STYLE_CONFIG.label);
   ctx.fillText(label, x, y + 38);
 
-  // Subtext (12px, weight 400, gray) - single line
+  // Subtext (date range) - single line
   if (subtext && subtext.length > 0) {
-    ctx.fillStyle = "#b7bdc8";
-    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.fillStyle = STYLE_CONFIG.subtext.color;
+    ctx.font = getFontString(STYLE_CONFIG.subtext);
     ctx.fillText(subtext, x, y + 54);
   }
 }
