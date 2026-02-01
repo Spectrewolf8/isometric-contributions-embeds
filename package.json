@@ -1,0 +1,51 @@
+{
+  "type": "module",
+  "engines": {
+    "node": ">=22.0"
+  },
+  "scripts": {
+    "start": "parcel watch src/manifest.json --host localhost",
+    "build": "parcel build src/manifest.json",
+    "build:chrome": "node scripts/build.js chrome",
+    "build:edge": "node scripts/build.js edge",
+    "build:firefox": "node scripts/build.js firefox",
+    "build:all": "node scripts/build.js all",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "test": "biome check && vitest run",
+    "test:e2e": "node scripts/test-e2e.js",
+    "test:watch": "vitest",
+    "version:get": "node scripts/version.js get",
+    "version:patch": "node scripts/version.js patch",
+    "version:minor": "node scripts/version.js minor",
+    "version:major": "node scripts/version.js major",
+    "submit:chrome": "node scripts/submit.js chrome",
+    "submit:edge": "node scripts/submit.js edge",
+    "submit:firefox": "node scripts/submit.js firefox",
+    "submit:all": "node scripts/submit.js all",
+    "submit:dry-run": "node scripts/submit.js all --dry-run",
+    "release": "npm run build:all && npm run submit:all"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@parcel/config-webextension": "^2.16.3",
+    "@parcel/reporter-bundle-analyzer": "^2.16.3",
+    "@parcel/reporter-bundle-buddy": "^2.16.3",
+    "chrome-webstore-upload-cli": "^3.5.0",
+    "jsdom": "^27.4.0",
+    "parcel": "^2.16.3",
+    "puppeteer": "^24.0.0",
+    "vitest": "^4.0.18",
+    "web-ext-submit": "^7.8.0"
+  },
+  "targets": {
+    "default": {
+      "engines": {
+        "browsers": ">= 50%"
+      }
+    }
+  },
+  "overrides": {
+    "web-ext": "^9.2.0"
+  }
+}
