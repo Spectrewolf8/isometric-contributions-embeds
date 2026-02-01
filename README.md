@@ -93,7 +93,6 @@ npm run generate -- spectrewolf8 2025 graph.png --width 1920 --height 1080
 
 - `--stats` - Include statistics overlay
 - `--credit` - Show username in bottom right
-- `--theme <name>` - Visual theme: `github`, `dark`, `light`, `neon`, `minimal`, `ocean` (default: github)
 - `--width <px>` - Canvas width (default: 1000)
 - `--height <px>` - Canvas height (default: 600)
 
@@ -138,37 +137,37 @@ GET /api/graph
 **Basic Graph:**
 
 ```
-https://your-app.onrender.com/api/graph?username=spectrewolf8
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8
 ```
 
 **With Statistics:**
 
 ```
-https://your-app.onrender.com/api/graph?username=spectrewolf8&stats=true
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&stats=true
 ```
 
 **Specific Year:**
 
 ```
-https://your-app.onrender.com/api/graph?username=spectrewolf8&year=2025
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&year=2025
 ```
 
 **With Theme:**
 
 ```
-https://your-app.onrender.com/api/graph?username=spectrewolf8&theme=dark&stats=true
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&theme=dark&stats=true
 ```
 
 **With Credit:**
 
 ```
-https://your-app.onrender.com/api/graph?username=spectrewolf8&credit=true
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&credit=true
 ```
 
 **Full Customization:**
 
 ```
-https://your-app.onrender.com/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true&theme=neon
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true&theme=neon
 ```
 
 > **Note:** Replace `your-app.onrender.com` with your actual deployment URL. Use `http://localhost:3000` for local testing.
@@ -180,16 +179,14 @@ The API implements intelligent daily caching:
 - **Cache Duration**: 1 hour with revalidation (ensures freshness)
 - **Cache Strategy**: One generation per username+params per day
 - **Cache Headers**: Check `X-Cache` header (`HIT` or `MISS`)
-- **Validation**: Uses `Last-Modified` and `ETag` headers for cache revalidation
 - **Benefits**: Instant responses for repeated requests with fresh updates
 
 **Cache Response Headers:**
 
 ```
 Content-Type: image/png
+Content-Length: <bytes>
 Cache-Control: public, max-age=3600, must-revalidate
-Last-Modified: <file-modification-time>
-ETag: "<timestamp>-<size>"
 X-Cache: HIT | MISS
 ```
 
@@ -284,45 +281,53 @@ This project is optimized for Render deployment with Docker support.
 2. Create new Web Service on [Render](https://render.com)
 3. Connect your repo and select **Docker** environment
 4. Add environment variables:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_BUCKET_NAME`
-5. Deploy!
 
-📖 **Detailed instructions:** See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_BUCKET_NAME`
+
+5. Deploy!
 
 **Why Docker?**
 The `canvas` package requires system libraries (Cairo, Pango) that are automatically installed via the Dockerfile.
 
+### Minimal Deployment (Docker CLI)
+
+```bash
+# Build image
+docker build -t isometric-contributions .
+
+# Run container with required env vars
+docker run -p 3000:3000 \
+  -e SUPABASE_URL=your-url \
+  -e SUPABASE_ANON_KEY=your-anon-key \
+  -e SUPABASE_BUCKET_NAME=isometric-cache \
+  isometric-contributions
+```
+
 ### Other Platforms
 
-The Docker setup works on any platform supporting Docker:
-
-- Railway
-- Fly.io
-- Google Cloud Run
-- AWS ECS/Fargate
-- Azure Container Apps
+The Docker setup works on any platform supporting containers (Railway, Fly.io, Cloud Run, ECS, Azure Container Apps).
 
 ## Embedding in README
 
 ### Markdown
 
 ```markdown
-![GitHub Contributions](https://your-app.onrender.com/api/graph?username=spectrewolf8&stats=true)
+![GitHub Contributions](https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&stats=true)
 ```
 
 **With theme:**
 
 ```markdown
-![GitHub Contributions](https://your-app.onrender.com/api/graph?username=spectrewolf8&theme=dark&stats=true)
+![GitHub Contributions](https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&theme=dark&stats=true)
 ```
 
 ### HTML
 
 ```html
 <img
-  src="https://your-app.onrender.com/api/graph?username=spectrewolf8&theme=neon&stats=true"
+  src="https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&theme=neon&stats=true"
   alt="GitHub Contributions"
 />
 ```
@@ -354,26 +359,18 @@ Generates PNG images with:
 
 ## Cache Management
 
-**Clear Cache:**
+**Supabase Storage Cache:**
 
-```bash
-# Windows
-rmdir /s /q .cache
-
-# Linux/Mac
-rm -rf .cache
-```
-
-**Cache Location:** `.cache/` directory
-**Cache Size:** ~100-200KB per cached image
+- Production buckets are pruned automatically by pg_cron using the cleanup job in [supabase-cache-cleanup.sql](supabase/functions/clean-cache/supabase-cache-cleanup.sql).
+- By default, files older than 7 days are removed once a day (update the retention or schedule inside the script).
+- Trigger an immediate cleanup from the Supabase SQL editor: `SELECT * FROM cleanup_old_cache(1);`
 
 ## Troubleshooting
 
-**Clear Cache:**
+**Force Supabase Cleanup:**
 
-```bash
-rm -rf .cache && npm run server
-```
+1. Run the job once: `SELECT * FROM cleanup_old_cache();`
+2. Verify the cron entry exists: `SELECT jobname, schedule FROM cron.job WHERE jobname = 'cleanup-old-cache';`
 
 ## Acknowledgements
 

@@ -11,7 +11,9 @@
 
 import "dotenv/config";
 import { createServer } from "node:http";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import {
   fetchContributions,
@@ -42,6 +44,11 @@ const AVAILABLE_THEMES = {
 };
 const PORT = process.env.PORT || 3000;
 const BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME || "isometric-cache";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const documentationHTML = readFileSync(
+  join(__dirname, "docs", "index.html"),
+  "utf8",
+);
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -212,251 +219,11 @@ function sendErrorResponse(res, statusCode, message) {
  * @param {http.ServerResponse} res
  */
 function sendDocumentation(res) {
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isometric Contributions API</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-            line-height: 1.6;
-            color: #24292f;
-        }
-        h1 { color: #0969da; }
-        h2 { color: #1a7f37; margin-top: 32px; }
-        code {
-            background: #f6f8fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-            font-size: 12px;
-        }
-        pre {
-            background: #f6f8fa;
-            padding: 16px;
-            border-radius: 6px;
-            overflow-x: auto;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 16px 0;
-        }
-        th, td {
-            border: 1px solid #d0d7de;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        th {
-            background: #f6f8fa;
-            font-weight: 600;
-        }
-        .example {
-            margin: 16px 0;
-        }
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: #0969da;
-            color: white;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-    </style>
-</head>
-<body>
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 style="font-size: 2.5em; margin-bottom: 10px;">
-            <img src="/media/assets/icon-128.png" alt="Isometric Contributions" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 12px;">
-            Isometric Contributions API
-        </h1>
-        <p style="font-size: 1.2em; color: #586069; margin-bottom: 0;">Generate beautiful isometric contribution graphs with themes, caching and customization</p>
-    </div>
-    
-    <h2>Endpoint</h2>
-    <pre>GET /api/graph</pre>
-    
-    <h2>Query Parameters</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Required</th>
-                <th>Default</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>username</code></td>
-                <td>string</td>
-                <td><span class="badge">Required</span></td>
-                <td>-</td>
-                <td>GitHub username</td>
-            </tr>
-            <tr>
-              <td><code>year</code> / <code>y</code></td>
-                <td>number</td>
-                <td>Optional</td>
-                <td>current year</td>
-              <td>Year to fetch contributions for (supports <code>year</code> or <code>y</code>)</td>
-            </tr>
-            <tr>
-                <td><code>width</code></td>
-                <td>number</td>
-                <td>Optional</td>
-                <td>1000</td>
-                <td>Image width in pixels</td>
-            </tr>
-            <tr>
-                <td><code>height</code></td>
-                <td>number</td>
-                <td>Optional</td>
-                <td>600</td>
-                <td>Image height in pixels</td>
-            </tr>
-            <tr>
-                <td><code>stats</code></td>
-                <td>boolean</td>
-                <td>Optional</td>
-                <td>false</td>
-                <td>Include statistics overlay (use <code>stats=true</code>)</td>
-            </tr>
-            <tr>
-                <td><code>credit</code></td>
-                <td>boolean</td>
-                <td>Optional</td>
-                <td>false</td>
-                <td>Show username credit (use <code>credit=true</code>)</td>
-            </tr>
-            <tr>
-                <td><code>theme</code></td>
-                <td>string</td>
-                <td>Optional</td>
-                <td>github</td>
-                <td>Visual theme: <code>github</code>, <code>dark</code>, <code>light</code>, <code>neon</code>, <code>minimal</code>, <code>ocean</code></td>
-            </tr>
-        </tbody>
-    </table>
-    
-    <h2>Examples</h2>
-    
-    <div class="example">
-        <h3>Basic usage:</h3>
-        <pre>/api/graph?username=spectrewolf8</pre>
-    </div>
-    
-    <div class="example">
-        <h3>With specific year:</h3>
-        <pre>/api/graph?username=spectrewolf8&year=2025</pre>
-    </div>
-    
-    <div class="example">
-        <h3>With stats:</h3>
-        <pre>/api/graph?username=spectrewolf8&stats=true</pre>
-    </div>
-    
-    <div class="example">
-        <h3>Custom dimensions:</h3>
-        <pre>/api/graph?username=spectrewolf8&width=1920&height=1080</pre>
-    </div>
-    
-    <div class="example">
-        <h3>With theme:</h3>
-        <pre>/api/graph?username=spectrewolf8&theme=dark&stats=true</pre>
-    </div>
-    
-    <div class="example">
-        <h3>Full customization:</h3>
-        <pre>/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true&theme=neon</pre>
-    </div>
-    
-    <h2>Theme Gallery</h2>
-    <p>Preview different themes with the same data:</p>
-    <table style="text-align: center;">
-        <thead>
-            <tr>
-                <th>Theme</th>
-                <th>Preview</th>
-                <th>URL</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>GitHub (Default)</strong></td>
-                <td><img src="/media/examples/output-github.png" alt="GitHub Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
-                <td><code>/api/graph?username=spectrewolf8&theme=github</code></td>
-            </tr>
-            <tr>
-                <td><strong>Dark</strong></td>
-                <td><img src="/media/examples/output-dark.png" alt="Dark Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
-                <td><code>/api/graph?username=spectrewolf8&theme=dark</code></td>
-            </tr>
-            <tr>
-                <td><strong>Light</strong></td>
-                <td><img src="/media/examples/output-light.png" alt="Light Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
-                <td><code>/api/graph?username=spectrewolf8&theme=light</code></td>
-            </tr>
-            <tr>
-                <td><strong>Neon</strong></td>
-                <td><img src="/media/examples/output-neon.png" alt="Neon Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
-                <td><code>/api/graph?username=spectrewolf8&theme=neon</code></td>
-            </tr>
-            <tr>
-                <td><strong>Minimal</strong></td>
-                <td><img src="/media/examples/output-minimal.png" alt="Minimal Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
-                <td><code>/api/graph?username=spectrewolf8&theme=minimal</code></td>
-            </tr>
-            <tr>
-                <td><strong>Ocean</strong></td>
-                <td><img src="/media/examples/output-ocean.png" alt="Ocean Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
-                <td><code>/api/graph?username=spectrewolf8&theme=ocean</code></td>
-            </tr>
-        </tbody>
-    </table>
-    
-    <h2>Caching</h2>
-    <p>
-        Images are cached per username and parameters combination for 24 hours. 
-        Multiple requests with the same parameters will be served from cache instantly.
-        Check the <code>X-Cache</code> header: <code>HIT</code> for cached, <code>MISS</code> for newly generated.
-    </p>
-    
-    <h2>Response Headers</h2>
-    <ul>
-        <li><code>Content-Type: image/png</code></li>
-        <li><code>Cache-Control: public, max-age=86400</code> (24 hours)</li>
-        <li><code>X-Cache: HIT | MISS</code> (cache status)</li>
-    </ul>
-    
-    <h2>Error Responses</h2>
-    <p>Errors return JSON with an error message:</p>
-    <pre>{
-  "error": "Error message here"
-}</pre>
-    
-    <h2>Try It</h2>
-    <p>Try different themes and configurations:</p>
-    <ul>
-        <li><a href="/api/graph?username=spectrewolf8&stats=true" target="_blank">GitHub theme with stats →</a></li>
-        <li><a href="/api/graph?username=spectrewolf8&theme=dark&stats=true" target="_blank">Dark theme with stats →</a></li>
-        <li><a href="/api/graph?username=spectrewolf8&theme=neon&width=1200&height=700&year=2025&credit=true&stats=true" target="_blank">Neon theme (large) →</a></li>
-    </ul>
-</body>
-</html>`;
-
   res.writeHead(200, {
     "Content-Type": "text/html",
-    "Content-Length": Buffer.byteLength(html),
+    "Content-Length": Buffer.byteLength(documentationHTML),
   });
-  res.end(html);
+  res.end(documentationHTML);
 }
 
 /**
