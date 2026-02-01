@@ -1,4 +1,4 @@
-# 🎨 Isometric Contributions
+# <img src="icon-128.png" alt="logo" width="40" height="40" style="vertical-align: middle;"> Isometric Contributions
 
 Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Available as both a CLI tool and a fast, cached API server.
 
