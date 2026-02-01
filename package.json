@@ -8,20 +8,16 @@
   },
   "scripts": {
     "generate": "node generate.js",
+    "start": "node server.js",
     "server": "node server.js",
     "dev": "node --watch server.js",
-    "test:api": "node test-api.js",
-    "vercel:dev": "vercel dev",
-    "vercel:deploy": "vercel --prod"
+    "test:api": "node test-api.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.93.3",
     "canvas": "^3.2.1",
     "dotenv": "^17.2.3",
     "jsdom": "^27.4.0"
-  },
-  "devDependencies": {
-    "vercel": "^28.18.5"
   },
   "overrides": {
     "@exodus/bytes": "1.8.0"
