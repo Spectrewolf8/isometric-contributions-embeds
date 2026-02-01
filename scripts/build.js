@@ -83,9 +83,7 @@ function createZip(browser) {
   })
 
   const stats = fs.statSync(zipPath)
-  console.log(
-    `Created ${config.zipName} (${(stats.size / 1024).toFixed(1)} KB)`
-  )
+  console.log(`Created ${config.zipName} (${(stats.size / 1024).toFixed(1)} KB)`)
 }
 
 function build(browser) {
@@ -100,9 +98,7 @@ function build(browser) {
   // For Firefox, transform the manifest in dist/
   if (browser === 'firefox') {
     console.log('Transforming manifest for Firefox (v3 → v2)...')
-    const manifest = JSON.parse(
-      fs.readFileSync(path.join(distDir, 'manifest.json'), 'utf8')
-    )
+    const manifest = JSON.parse(fs.readFileSync(path.join(distDir, 'manifest.json'), 'utf8'))
     const v2Manifest = transformForFirefox(manifest)
     writeDistManifest(v2Manifest)
   }
