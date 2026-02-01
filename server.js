@@ -11,6 +11,7 @@
 
 import "dotenv/config";
 import { createServer } from "node:http";
+import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import {
   fetchContributions,
@@ -20,8 +21,25 @@ import {
   renderIsometricChart,
   renderWithStats,
   exportToPNG,
+  setTheme,
 } from "./src/renderer.js";
-
+import {
+  GITHUB_THEME,
+  DARK_THEME,
+  LIGHT_THEME,
+  NEON_THEME,
+  MINIMAL_THEME,
+  OCEAN_THEME,
+} from "./src/theme-config.js";
+// Available themes mapping
+const AVAILABLE_THEMES = {
+  github: GITHUB_THEME,
+  dark: DARK_THEME,
+  light: LIGHT_THEME,
+  neon: NEON_THEME,
+  minimal: MINIMAL_THEME,
+  ocean: OCEAN_THEME,
+};
 const PORT = process.env.PORT || 3000;
 const BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME || "isometric-cache";
 
@@ -115,6 +133,7 @@ function parseQueryParams(search) {
     height: params.get("height") ? parseInt(params.get("height"), 10) : 600,
     stats: params.get("stats") === "true",
     credit: params.get("credit") === "true",
+    theme: params.get("theme") || "github",
   };
 }
 
@@ -124,7 +143,12 @@ function parseQueryParams(search) {
  * @returns {Promise<Buffer>}
  */
 async function generateGraph(params) {
-  const { username, year, width, height, stats, credit } = params;
+  const { username, year, width, height, stats, credit, theme } = params;
+
+  // Set theme if specified
+  if (theme && AVAILABLE_THEMES[theme.toLowerCase()]) {
+    setTheme(AVAILABLE_THEMES[theme.toLowerCase()]);
+  }
 
   // Fetch contribution data
   const data = await fetchContributions(username, year);
@@ -247,8 +271,13 @@ function sendDocumentation(res) {
     </style>
 </head>
 <body>
-    <h1>🎨 Isometric Contributions API</h1>
-    <p>Generate beautiful isometric contribution graphs with caching and customization.</p>
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="font-size: 2.5em; margin-bottom: 10px;">
+            <img src="/media/assets/icon-128.png" alt="Isometric Contributions" style="width: 48px; height: 48px; vertical-align: middle; margin-right: 12px;">
+            Isometric Contributions API
+        </h1>
+        <p style="font-size: 1.2em; color: #586069; margin-bottom: 0;">Generate beautiful isometric contribution graphs with themes, caching and customization</p>
+    </div>
     
     <h2>Endpoint</h2>
     <pre>GET /api/graph</pre>
@@ -307,6 +336,13 @@ function sendDocumentation(res) {
                 <td>false</td>
                 <td>Show username credit (use <code>credit=true</code>)</td>
             </tr>
+            <tr>
+                <td><code>theme</code></td>
+                <td>string</td>
+                <td>Optional</td>
+                <td>github</td>
+                <td>Visual theme: <code>github</code>, <code>dark</code>, <code>light</code>, <code>neon</code>, <code>minimal</code>, <code>ocean</code></td>
+            </tr>
         </tbody>
     </table>
     
@@ -333,9 +369,58 @@ function sendDocumentation(res) {
     </div>
     
     <div class="example">
-        <h3>Full customization:</h3>
-        <pre>/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true</pre>
+        <h3>With theme:</h3>
+        <pre>/api/graph?username=spectrewolf8&theme=dark&stats=true</pre>
     </div>
+    
+    <div class="example">
+        <h3>Full customization:</h3>
+        <pre>/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true&theme=neon</pre>
+    </div>
+    
+    <h2>Theme Gallery</h2>
+    <p>Preview different themes with the same data:</p>
+    <table style="text-align: center;">
+        <thead>
+            <tr>
+                <th>Theme</th>
+                <th>Preview</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>GitHub (Default)</strong></td>
+                <td><img src="/media/examples/output-github.png" alt="GitHub Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
+                <td><code>/api/graph?username=spectrewolf8&theme=github</code></td>
+            </tr>
+            <tr>
+                <td><strong>Dark</strong></td>
+                <td><img src="/media/examples/output-dark.png" alt="Dark Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
+                <td><code>/api/graph?username=spectrewolf8&theme=dark</code></td>
+            </tr>
+            <tr>
+                <td><strong>Light</strong></td>
+                <td><img src="/media/examples/output-light.png" alt="Light Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
+                <td><code>/api/graph?username=spectrewolf8&theme=light</code></td>
+            </tr>
+            <tr>
+                <td><strong>Neon</strong></td>
+                <td><img src="/media/examples/output-neon.png" alt="Neon Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
+                <td><code>/api/graph?username=spectrewolf8&theme=neon</code></td>
+            </tr>
+            <tr>
+                <td><strong>Minimal</strong></td>
+                <td><img src="/media/examples/output-minimal.png" alt="Minimal Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
+                <td><code>/api/graph?username=spectrewolf8&theme=minimal</code></td>
+            </tr>
+            <tr>
+                <td><strong>Ocean</strong></td>
+                <td><img src="/media/examples/output-ocean.png" alt="Ocean Theme" style="max-width: 200px; border: 1px solid #ddd;"></td>
+                <td><code>/api/graph?username=spectrewolf8&theme=ocean</code></td>
+            </tr>
+        </tbody>
+    </table>
     
     <h2>Caching</h2>
     <p>
@@ -358,11 +443,12 @@ function sendDocumentation(res) {
 }</pre>
     
     <h2>Try It</h2>
-    <p>
-        <a href="/api/graph?username=spectrewolf8&stats=true" target="_blank">
-            View example graph →
-        </a>
-    </p>
+    <p>Try different themes and configurations:</p>
+    <ul>
+        <li><a href="/api/graph?username=spectrewolf8&stats=true" target="_blank">GitHub theme with stats →</a></li>
+        <li><a href="/api/graph?username=spectrewolf8&theme=dark&stats=true" target="_blank">Dark theme with stats →</a></li>
+        <li><a href="/api/graph?username=spectrewolf8&theme=neon&width=1200&height=700" target="_blank">Neon theme (large) →</a></li>
+    </ul>
 </body>
 </html>`;
 
@@ -437,6 +523,33 @@ async function handleRequest(req, res) {
     }
   }
 
+  // Serve static media files
+  if (url.pathname.startsWith("/media/")) {
+    try {
+      const filePath = join(process.cwd(), url.pathname.slice(1)); // Remove leading slash
+      const fs = await import("node:fs");
+      const fileBuffer = fs.readFileSync(filePath);
+
+      // Determine content type based on file extension
+      const ext = url.pathname.toLowerCase().split(".").pop();
+      const contentTypes = {
+        png: "image/png",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        gif: "image/gif",
+        svg: "image/svg+xml",
+      };
+
+      res.writeHead(200, {
+        "Content-Type": contentTypes[ext] || "application/octet-stream",
+        "Cache-Control": "public, max-age=86400", // 24 hours
+      });
+      return res.end(fileBuffer);
+    } catch (error) {
+      return sendErrorResponse(res, 404, "File not found");
+    }
+  }
+
   // 404 for unknown routes
   return sendErrorResponse(res, 404, "Not Found");
 }
@@ -446,17 +559,17 @@ const server = createServer(handleRequest);
 
 server.listen(PORT, () => {
   console.log(`
-╔════════════════════════════════════════════════════════════╗
-║  🎨 Isometric Contributions API Server                     ║
-╠════════════════════════════════════════════════════════════╣
-║  Status:     Running                                       ║
-║  Port:       ${PORT.toString().padEnd(46)}║
-║  Storage:    Supabase (${BUCKET_NAME})${" ".repeat(46 - 19 - BUCKET_NAME.length)}║
-║                                                            ║
-║  Documentation: http://localhost:${PORT}/                     ║
-║  API Endpoint:  http://localhost:${PORT}/api/graph            ║
-║  Health Check:  http://localhost:${PORT}/health               ║
-╚════════════════════════════════════════════════════════════╝
+  🎨 Isometric Contributions API Server                     
+  Status:     Running                                       
+  Port:       ${PORT.toString().padEnd(46)}
+  Storage:    Supabase (${BUCKET_NAME})${" ".repeat(
+    46 - 19 - BUCKET_NAME.length,
+  )}
+                                                            
+  Documentation: http://localhost:${PORT}/                     
+  API Endpoint:  http://localhost:${PORT}/api/graph            
+  Health Check:  http://localhost:${PORT}/health               
+
   `);
   console.log("Press Ctrl+C to stop the server\n");
   console.log("💡 Cache cleanup runs automatically via Supabase pg_cron\n");

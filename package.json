@@ -21,6 +21,9 @@
     "jsdom": "^27.4.0"
   },
   "devDependencies": {
-    "vercel": "^32.3.0"
+    "vercel": "^28.18.5"
+  },
+  "overrides": {
+    "@exodus/bytes": "1.8.0"
   }
 }
