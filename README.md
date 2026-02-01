@@ -52,11 +52,13 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
 ## Features
 
 - ⚡ **Fast API** with intelligent caching and revalidation
+- 🎨 **6 Built-in Themes**: GitHub, Dark, Light, Neon, Minimal, Ocean
 - 📊 **Statistics Overlay**: Contributions, streaks, averages
-- 🖼️ **Customizable**: Dimensions, year selection, credits
+- 🖼️ **Customizable**: Dimensions, year selection, credits, themes
 - 🚀 **Minimal**: Lightweight with no framework overhead
 - 💾 **Smart Caching**: Efficient daily caching with instant updates
 - 🎯 **Single Year Focus**: Clean graphs for one year at a time
+- 🐳 **Docker Ready**: Easy deployment on Render, Railway, or any platform
 
 ## Installation
 
@@ -91,6 +93,7 @@ npm run generate -- spectrewolf8 2025 graph.png --width 1920 --height 1080
 
 - `--stats` - Include statistics overlay
 - `--credit` - Show username in bottom right
+- `--theme <name>` - Visual theme: `github`, `dark`, `light`, `neon`, `minimal`, `ocean` (default: github)
 - `--width <px>` - Canvas width (default: 1000)
 - `--height <px>` - Canvas height (default: 600)
 
@@ -120,46 +123,55 @@ GET /api/graph
 
 ### Query Parameters
 
-| Parameter  | Type    | Required | Default      | Description                                        |
-| ---------- | ------- | -------- | ------------ | -------------------------------------------------- |
-| `username` | string  | ✅ Yes   | -            | GitHub username                                    |
-| `year`/`y` | number  | No       | current year | Year to fetch contributions for (supports aliases) |
-| `width`    | number  | No       | `1000`       | Image width in pixels                              |
-| `height`   | number  | No       | `600`        | Image height in pixels                             |
-| `stats`    | boolean | No       | `false`      | Include statistics overlay                         |
-| `credit`   | boolean | No       | `false`      | Show username credit                               |
+| Parameter  | Type    | Required | Default      | Description                                                         |
+| ---------- | ------- | -------- | ------------ | ------------------------------------------------------------------- |
+| `username` | string  | ✅ Yes   | -            | GitHub username                                                     |
+| `year`/`y` | number  | No       | current year | Year to fetch contributions for (supports aliases)                  |
+| `theme`    | string  | No       | `github`     | Visual theme: `github`, `dark`, `light`, `neon`, `minimal`, `ocean` |
+| `width`    | number  | No       | `1000`       | Image width in pixels                                               |
+| `height`   | number  | No       | `600`        | Image height in pixels                                              |
+| `stats`    | boolean | No       | `false`      | Include statistics overlay                                          |
+| `credit`   | boolean | No       | `false`      | Show username credit                                                |
 
 ### API Examples
 
 **Basic Graph:**
 
 ```
-http://localhost:3000/api/graph?username=spectrewolf8
+https://your-app.onrender.com/api/graph?username=spectrewolf8
 ```
 
 **With Statistics:**
 
 ```
-http://localhost:3000/api/graph?username=spectrewolf8&stats=true
+https://your-app.onrender.com/api/graph?username=spectrewolf8&stats=true
 ```
 
 **Specific Year:**
 
 ```
-http://localhost:3000/api/graph?username=spectrewolf8&year=2025
+https://your-app.onrender.com/api/graph?username=spectrewolf8&year=2025
+```
+
+**With Theme:**
+
+```
+https://your-app.onrender.com/api/graph?username=spectrewolf8&theme=dark&stats=true
 ```
 
 **With Credit:**
 
 ```
-http://localhost:3000/api/graph?username=spectrewolf8&credit=true
+https://your-app.onrender.com/api/graph?username=spectrewolf8&credit=true
 ```
 
 **Full Customization:**
 
 ```
-http://localhost:3000/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true
+https://your-app.onrender.com/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true&theme=neon
 ```
+
+> **Note:** Replace `your-app.onrender.com` with your actual deployment URL. Use `http://localhost:3000` for local testing.
 
 ### Caching
 
@@ -243,19 +255,74 @@ const canvas = renderWithStats(days, {
 });
 ```
 
+### Available Themes
+
+```javascript
+import {
+  GITHUB_THEME,
+  DARK_THEME,
+  LIGHT_THEME,
+  NEON_THEME,
+  MINIMAL_THEME,
+  OCEAN_THEME,
+} from "./src/theme-config.js";
+import { setTheme } from "./src/renderer.js";
+
+// Apply theme before rendering
+setTheme(NEON_THEME);
+```
+
+## Deployment
+
+### Deploy on Render (Recommended)
+
+This project is optimized for Render deployment with Docker support.
+
+**Quick Deploy:**
+
+1. Push to GitHub
+2. Create new Web Service on [Render](https://render.com)
+3. Connect your repo and select **Docker** environment
+4. Add environment variables:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_BUCKET_NAME`
+5. Deploy!
+
+📖 **Detailed instructions:** See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+
+**Why Docker?**
+The `canvas` package requires system libraries (Cairo, Pango) that are automatically installed via the Dockerfile.
+
+### Other Platforms
+
+The Docker setup works on any platform supporting Docker:
+
+- Railway
+- Fly.io
+- Google Cloud Run
+- AWS ECS/Fargate
+- Azure Container Apps
+
 ## Embedding in README
 
 ### Markdown
 
 ```markdown
-![GitHub Contributions](http://your-domain.com/api/graph?username=spectrewolf8&stats=true)
+![GitHub Contributions](https://your-app.onrender.com/api/graph?username=spectrewolf8&stats=true)
+```
+
+**With theme:**
+
+```markdown
+![GitHub Contributions](https://your-app.onrender.com/api/graph?username=spectrewolf8&theme=dark&stats=true)
 ```
 
 ### HTML
 
 ```html
 <img
-  src="http://your-domain.com/api/graph?username=spectrewolf8&theme=dark"
+  src="https://your-app.onrender.com/api/graph?username=spectrewolf8&theme=neon&stats=true"
   alt="GitHub Contributions"
 />
 ```
