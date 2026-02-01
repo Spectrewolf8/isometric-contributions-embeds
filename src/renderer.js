@@ -14,98 +14,32 @@ import {
   precisionRound,
   sameDay,
 } from "./utils.js";
+import { GITHUB_THEME } from "./theme-config.js";
 
-// ============================================================================
 // STYLING CONFIGURATION
-// Customize colors, fonts, and other visual properties here
-// ============================================================================
-const STYLE_CONFIG = {
-  // Box Title (Contributions, Streaks)
-  title: {
-    color: "#24292f",
-    fontFamily: "Segoe UI",
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 24,
-  },
-
-  // Stat Values (large numbers: 800, 45, etc.)
-  value: {
-    color: "#2BD853",
-    fontFamily: "Segoe UI",
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 30,
-  },
-
-  // Stat Labels (Total, This week, Best day, etc.)
-  label: {
-    color: "#ffffff",
-    fontFamily: "Segoe UI",
-    fontSize: 12,
-    fontWeight: "600",
-    lineHeight: 18,
-  },
-
-  // Subtext (date ranges: Jan 1 → Dec 31)
-  subtext: {
-    color: "#b7bdc8",
-    fontFamily: "Segoe UI",
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 18,
-  },
-
-  // Average text ("Average:")
-  averageText: {
-    color: "#24292f",
-    fontFamily: "Segoe UI",
-    fontSize: 12,
-    fontWeight: "400",
-  },
-
-  // Average value (the number)
-  averageValue: {
-    color: "#2ea043",
-    fontFamily: "Segoe UI",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  // Average unit ("/ day")
-  averageUnit: {
-    color: "#57606a",
-    fontFamily: "Segoe UI",
-    fontSize: 12,
-    fontWeight: "400",
-  },
-
-  // Box styling
-  box: {
-    backgroundColor: "rgba(22, 27, 34, 0.6)",
-    borderColor: "rgba(48, 54, 61, 0.6)",
-    borderWidth: 2,
-    borderRadius: 8,
-    shadowColor: "rgba(0, 0, 0, 0.4)",
-    shadowBlur: 10,
-    shadowOffsetX: 0,
-    shadowOffsetY: 3,
-  },
-
-  // Dimensions
-  dimensions: {
-    contributionsBoxWidth: 316,
-    contributionsBoxHeight: 84,
-    streaksBoxWidth: 254,
-    streaksBoxHeight: 80,
-    titleHeight: 24,
-    averageBottomMargin: 16,
-  },
-};
+// Import different themes from theme-config.js or customize here
+// Available themes: GITHUB_THEME, DARK_THEME, LIGHT_THEME, NEON_THEME, MINIMAL_THEME, OCEAN_THEME
+let STYLE_CONFIG = { ...GITHUB_THEME };
 
 // Helper function to create font string
 function getFontString(style) {
   return `${style.fontWeight} ${style.fontSize}px "${style.fontFamily}", sans-serif`;
+}
+
+/**
+ * Set the active theme
+ * @param {Object} theme - Theme configuration object
+ */
+export function setTheme(theme) {
+  STYLE_CONFIG = { ...theme };
+}
+
+/**
+ * Get current theme configuration
+ * @returns {Object} Current STYLE_CONFIG
+ */
+export function getStyleConfig() {
+  return STYLE_CONFIG;
 }
 // ============================================================================
 
