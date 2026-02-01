@@ -14,5 +14,5 @@ artifacts
 error-screenshot.png
 
 # API Cache
-.cache/*
+.cache/*.png
 
