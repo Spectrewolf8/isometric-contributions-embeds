@@ -118,6 +118,7 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
  * @param {number} options.height - Canvas height (default: 600)
  * @param {number} options.cubeSize - Size of each cube (default: 16)
  * @param {number} options.maxHeight - Maximum cube height (default: 100)
+ * @param {string} options.username - Username to display as credit (optional)
  * @returns {Canvas} Canvas with rendered graph
  */
 export function renderIsometricChart(days, options = {}) {
@@ -126,6 +127,7 @@ export function renderIsometricChart(days, options = {}) {
     height = 600,
     cubeSize = 16,
     maxHeight = 100,
+    username = null,
   } = options;
 
   // Create canvas
@@ -196,6 +198,11 @@ export function renderIsometricChart(days, options = {}) {
       const p3d = new obelisk.Point3D(cubeSize * x, cubeSize * y, 0);
       pixelView.renderObject(cube, p3d);
     }
+  }
+
+  // Draw username credit if provided
+  if (username) {
+    drawUsernameCredit(ctx, username, canvas.width, canvas.height);
   }
 
   return canvas;
@@ -330,7 +337,9 @@ export function exportToDataURL(canvas) {
  * @returns {Canvas} Canvas with graph and stats
  */
 export function renderWithStats(days, options = {}) {
-  const canvas = renderIsometricChart(days, options);
+  // Extract username before passing to renderIsometricChart to avoid double rendering
+  const { username, ...chartOptions } = options;
+  const canvas = renderIsometricChart(days, chartOptions);
   const stats = calculateStats(days);
 
   const ctx = canvas.getContext("2d");
@@ -340,6 +349,11 @@ export function renderWithStats(days, options = {}) {
 
   // Draw streaks box (bottom left)
   drawStreaksBox(ctx, stats, 25, canvas.height - 125);
+
+  // Draw username credit if provided
+  if (username) {
+    drawUsernameCredit(ctx, username, canvas.width, canvas.height);
+  }
 
   return canvas;
 }
@@ -554,4 +568,38 @@ function drawFlexStatItem(ctx, value, label, subtext, x, y) {
     ctx.font = getFontString(STYLE_CONFIG.subtext);
     ctx.fillText(subtext, x, y + 54);
   }
+}
+
+/**
+ * Draw username credit in bottom right corner
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {string} username - GitHub username
+ * @param {number} canvasWidth - Canvas width
+ * @param {number} canvasHeight - Canvas height
+ */
+function drawUsernameCredit(ctx, username, canvasWidth, canvasHeight) {
+  // Save context state
+  ctx.save();
+
+  // Discrete styling - small, subtle text
+  const fontSize = 11;
+  const fontFamily = STYLE_CONFIG.subtext?.fontFamily || "Segoe UI";
+  ctx.font = `${fontSize}px "${fontFamily}", sans-serif`;
+
+  // Very subtle color with low opacity
+  const baseColor = STYLE_CONFIG.subtext?.color || "#768390";
+  ctx.fillStyle = baseColor;
+  ctx.globalAlpha = 0.5; // Make it more discrete
+
+  // Position in bottom right with padding
+  const padding = 12;
+  const text = `@${username}`;
+  const textWidth = ctx.measureText(text).width;
+  const x = canvasWidth - textWidth - padding;
+  const y = canvasHeight - padding;
+
+  ctx.fillText(text, x, y);
+
+  // Restore context state
+  ctx.restore();
 }

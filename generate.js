@@ -22,6 +22,7 @@ const username = args[0];
 const year =
   args[1] && !args[1].startsWith("--") ? Number.parseInt(args[1], 10) : null;
 const hasStatsFlag = args.includes("--stats");
+const hasCreditFlag = args.includes("--credit");
 
 // Determine output filename
 let output;
@@ -32,12 +33,15 @@ if (args.length >= 3 && !args[2].startsWith("--")) {
 }
 
 if (!username) {
-  console.error("Usage: node generate.js <username> [year] [output] [--stats]");
   console.error(
-    "Example: node generate.js spectrewolf8 2025 graph.png --stats",
+    "Usage: node generate.js <username> [year] [output] [--stats] [--credit]",
+  );
+  console.error(
+    "Example: node generate.js spectrewolf8 2025 graph.png --stats --credit",
   );
   console.error("\nOptions:");
   console.error("  --stats    Include statistics overlay on the image");
+  console.error("  --credit   Show username in bottom right corner");
   process.exit(1);
 }
 
@@ -69,12 +73,20 @@ async function main() {
 
     // Render isometric chart
     console.log("\nRendering isometric chart...");
+    const renderOptions = {
+      width: 1000,
+      height: 1000,
+      username: hasCreditFlag ? username : null,
+    };
     const canvas = hasStatsFlag
-      ? renderWithStats(days, { width: 1000, height: 600 })
-      : renderIsometricChart(days, { width: 1000, height: 600 });
+      ? renderWithStats(days, renderOptions)
+      : renderIsometricChart(days, renderOptions);
 
     if (hasStatsFlag) {
       console.log("✓ Statistics overlay included");
+    }
+    if (hasCreditFlag) {
+      console.log("✓ Username credit included");
     }
 
     // Export to PNG
