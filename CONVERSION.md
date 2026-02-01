@@ -60,7 +60,7 @@ node test-api-client.js spectrewolf8 2025
 
 To complete the conversion to an image generator, we need to:
 
-1. **Refactor Rendering Code** 
+1. **Refactor Rendering Code**
    - Modify `src/iso.js` to work with API data instead of DOM scraping
    - Remove browser-specific code (Chrome storage, DOM manipulation)
    - Make rendering work with Node.js canvas (node-canvas)
@@ -90,12 +90,14 @@ package.json              # ✅ Updated for API project
 ```
 
 ## Dependencies Kept
+
 - `@biomejs/biome` - Linting
 - `jsdom` - Testing DOM-dependent code
 - `vitest` - Test framework
 
 ## Dependencies Removed
+
 - `@parcel/*` - Extension bundling
 - `chrome-webstore-upload-cli` - Chrome store submission
-- `web-ext-submit` - Firefox store submission  
+- `web-ext-submit` - Firefox store submission
 - `puppeteer` - E2E testing for extension

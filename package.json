@@ -7,11 +7,15 @@
     "node": ">=22.0"
   },
   "scripts": {
+    "generate": "node generate.js",
     "test": "biome check && vitest run",
     "test:watch": "vitest",
     "test:api": "node test-api-client.js",
     "lint": "biome check",
     "lint:fix": "biome check --write"
+  },
+  "dependencies": {
+    "canvas": "^3.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",

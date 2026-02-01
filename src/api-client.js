@@ -19,7 +19,7 @@ export async function fetchContributions(username, year = null) {
   // Build URL
   const params = new URLSearchParams()
   params.append('format', 'nested')
-  
+
   if (year) {
     params.append('y', year.toString())
   }
@@ -28,7 +28,7 @@ export async function fetchContributions(username, year = null) {
 
   try {
     const response = await fetch(url)
-    
+
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status} ${response.statusText}`)
     }
@@ -59,7 +59,7 @@ export function parseContributionsData(apiData) {
   for (const [year, months] of Object.entries(apiData.contributions)) {
     for (const [month, monthData] of Object.entries(months)) {
       if (!monthData || typeof monthData !== 'object') continue
-      
+
       for (const [dayKey, day] of Object.entries(monthData)) {
         if (day && day.date) {
           days.push({
@@ -101,9 +101,9 @@ function getLevelColor(level) {
     1: '9be9a8', // Low contributions
     2: '40c463', // Medium-low contributions
     3: '30a14e', // Medium-high contributions
-    4: '216e39'  // High contributions
+    4: '216e39' // High contributions
   }
-  
+
   return colors[level] || colors[0]
 }
 
@@ -117,7 +117,7 @@ export function getContributionStats(apiData) {
   const totalObj = apiData.total || {}
   const year = Object.keys(totalObj)[0] || new Date().getFullYear()
   const total = totalObj[year] || 0
-  
+
   return {
     total: total,
     year: parseInt(year, 10),
