@@ -40,7 +40,7 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
     </td>
     <td align="center">
       <img src="media/examples/output-no-credit.png" width="300" alt="With Credit"/><br/>
-      <b>With Credit</b>
+      <b>Without Credit</b>
     </td>
     <td align="center">
       <img src="media/examples/output-light.png" width="300" alt="Light Theme"/><br/>
