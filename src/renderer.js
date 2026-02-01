@@ -3,7 +3,7 @@
  * Generates isometric 3D visualization from contribution data
  */
 
-import { createCanvas } from "canvas";
+import { createCanvas, registerFont } from "canvas";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -14,6 +14,29 @@ import {
   precisionRound,
   sameDay,
 } from "./utils.js";
+
+// Get directory paths
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const fontsDir = join(__dirname, "..", "fonts");
+
+// Register Segoe UI fonts from local fonts directory
+try {
+  registerFont(join(fontsDir, "Segoe UI.ttf"), {
+    family: "Segoe UI",
+    weight: "normal",
+  });
+  registerFont(join(fontsDir, "Segoe UI Bold.ttf"), {
+    family: "Segoe UI",
+    weight: "600",
+  });
+  registerFont(join(fontsDir, "Segoe UI Bold.ttf"), {
+    family: "Segoe UI",
+    weight: "bold",
+  });
+  console.log("✓ Registered Segoe UI fonts");
+} catch (e) {
+  console.warn("⚠ Could not register Segoe UI fonts:", e.message);
+}
 
 // Create a browser-like environment for obelisk
 const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
@@ -46,7 +69,6 @@ globalThis.document.createElement = function (tagName) {
 };
 
 // Load obelisk.js for isometric rendering
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const obeliskPath = join(__dirname, "obelisk.min.js");
 const obeliskCode = readFileSync(obeliskPath, "utf8");
 
@@ -275,10 +297,10 @@ export function renderWithStats(days, options = {}) {
   const ctx = canvas.getContext("2d");
 
   // Draw contributions box (top right)
-  drawContributionsBox(ctx, stats, canvas.width - 400, 30);
+  drawContributionsBox(ctx, stats, canvas.width - 390, 25);
 
   // Draw streaks box (bottom left)
-  drawStreaksBox(ctx, stats, 40, canvas.height - 180);
+  drawStreaksBox(ctx, stats, 25, canvas.height - 125);
 
   return canvas;
 }
@@ -292,77 +314,98 @@ export function renderWithStats(days, options = {}) {
  */
 function drawContributionsBox(ctx, stats, x, y) {
   const boxWidth = 370;
-  const boxHeight = 140;
+  const boxHeight = 90;
+  const titleHeight = 24;
 
-  // Box background and border
-  ctx.fillStyle = "rgba(22, 27, 34, 0.9)";
-  ctx.strokeStyle = "rgba(48, 54, 61, 1)";
-  ctx.lineWidth = 2;
+  // Title (outside, above the box)
+  ctx.fillStyle = "#74b9ff";
+  ctx.font = '16px "Segoe UI", sans-serif';
+  ctx.fillText("Contributions", x + 14, y + 16);
+
+  // Box starts below title
+  const boxY = y + titleHeight;
+
+  // Drop shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 3;
+
+  // Box background (transparent/semi-transparent)
+  ctx.fillStyle = "rgba(22, 27, 34, 0.6)";
   ctx.beginPath();
-  ctx.roundRect(x, y, boxWidth, boxHeight, 8);
+  ctx.roundRect(x, boxY, boxWidth, boxHeight, 8);
   ctx.fill();
+
+  // Reset shadow
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Border
+  ctx.strokeStyle = "rgba(48, 54, 61, 0.6)";
+  ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Title
-  ctx.fillStyle = "#e6edf3";
-  ctx.font =
-    'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText("Contributions", x + 15, y + 28);
-
-  // Stats boxes
-  const statY = y + 55;
-  const statHeight = 70;
+  // Stats row
+  const itemY = boxY + 12;
 
   // Total
-  drawStatItem(
+  drawFlexStatItem(
     ctx,
-    stats.countTotal,
+    stats.countTotal.toString(),
     "Total",
     stats.datesTotal,
-    x + 15,
-    statY,
-    110,
-    statHeight,
+    x + 16,
+    itemY,
   );
 
   // This week
-  drawStatItem(
+  drawFlexStatItem(
     ctx,
-    stats.weekCountTotal,
+    stats.weekCountTotal.toString(),
     "This week",
     stats.weekDatesTotal,
-    x + 135,
-    statY,
-    110,
-    statHeight,
+    x + 130,
+    itemY,
   );
 
   // Best day
-  const bestDayDate = stats.dateBest.split(" ").slice(0, 2).join(" ");
-  drawStatItem(
+  const bestDayDate = stats.dateBest.includes(" ")
+    ? stats.dateBest.split(" ").slice(0, 2).join(" ")
+    : stats.dateBest;
+  drawFlexStatItem(
     ctx,
     stats.maxCount.toString(),
     "Best day",
     bestDayDate,
-    x + 255,
-    statY,
-    100,
-    statHeight,
+    x + 250,
+    itemY,
   );
 
   // Average (bottom right)
-  ctx.fillStyle = "#8b949e";
-  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(`Average: `, x + boxWidth - 140, y + boxHeight - 15);
+  const avgY = boxY + boxHeight - 10;
+  ctx.fillStyle = "#7d8590";
+  ctx.font = '10px "Segoe UI", sans-serif';
+  const avgText = "Average:";
+  const avgNumText = stats.averageCount.toString();
+  const dayText = "/ day";
+
+  const dayWidth = ctx.measureText(dayText).width;
+  const numWidth = ctx.measureText(avgNumText).width;
+  const avgWidth = ctx.measureText(avgText).width;
+
+  const totalWidth = avgWidth + 4 + numWidth + 4 + dayWidth;
+  const startX = x + boxWidth - totalWidth - 14;
+
+  ctx.fillText(avgText, startX, avgY);
 
   ctx.fillStyle = "#2ea043";
-  ctx.font =
-    'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(`${stats.averageCount}`, x + boxWidth - 85, y + boxHeight - 15);
+  ctx.fillText(avgNumText, startX + avgWidth + 4, avgY);
 
-  ctx.fillStyle = "#8b949e";
-  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(` / day`, x + boxWidth - 60, y + boxHeight - 15);
+  ctx.fillStyle = "#7d8590";
+  ctx.fillText(dayText, startX + avgWidth + 4 + numWidth + 4, avgY);
 }
 
 /**
@@ -373,87 +416,99 @@ function drawContributionsBox(ctx, stats, x, y) {
  * @param {number} y - Y position
  */
 function drawStreaksBox(ctx, stats, x, y) {
-  const boxWidth = 330;
-  const boxHeight = 140;
+  const boxWidth = 270;
+  const boxHeight = 80;
+  const titleHeight = 24;
 
-  // Box background and border
-  ctx.fillStyle = "rgba(22, 27, 34, 0.9)";
-  ctx.strokeStyle = "rgba(48, 54, 61, 1)";
-  ctx.lineWidth = 2;
+  // Title (outside, above the box)
+  ctx.fillStyle = "#74b9ff";
+  ctx.font = '16px "Segoe UI", sans-serif';
+  ctx.fillText("Streaks", x + 14, y + 16);
+
+  // Box starts below title
+  const boxY = y + titleHeight;
+
+  // Drop shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 3;
+
+  // Box background (transparent/semi-transparent)
+  ctx.fillStyle = "rgba(22, 27, 34, 0.6)";
   ctx.beginPath();
-  ctx.roundRect(x, y, boxWidth, boxHeight, 8);
+  ctx.roundRect(x, boxY, boxWidth, boxHeight, 8);
   ctx.fill();
+
+  // Reset shadow
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Border
+  ctx.strokeStyle = "rgba(48, 54, 61, 0.6)";
+  ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Title
-  ctx.fillStyle = "#e6edf3";
-  ctx.font =
-    'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText("Streaks", x + 15, y + 28);
-
-  // Stats boxes
-  const statY = y + 55;
-  const statHeight = 70;
+  // Stats row
+  const itemY = boxY + 12;
 
   // Longest
-  const longestValue = `${stats.streakLongest} days`;
-  drawStatItem(
+  const longestDays = stats.streakLongest === 1 ? "day" : "days";
+  const longestValue = `${stats.streakLongest} ${longestDays}`;
+  drawFlexStatItem(
     ctx,
     longestValue,
     "Longest",
     stats.datesLongest,
-    x + 15,
-    statY,
-    150,
-    statHeight,
+    x + 16,
+    itemY,
   );
 
   // Current
-  const currentValue = `${stats.streakCurrent} days`;
-  drawStatItem(
+  const currentDays = stats.streakCurrent === 1 ? "day" : "days";
+  const currentValue =
+    stats.streakCurrent === 0
+      ? "0 days"
+      : `${stats.streakCurrent} ${currentDays}`;
+  const currentSubtext =
+    stats.streakCurrent === 0 ? "No current streak" : stats.datesCurrent;
+  drawFlexStatItem(
     ctx,
     currentValue,
     "Current",
-    stats.datesCurrent,
-    x + 175,
-    statY,
-    140,
-    statHeight,
+    currentSubtext,
+    x + 145,
+    itemY,
   );
 }
 
 /**
- * Draw a single stat item
+ * Draw a flex stat item (vertical stack: value → label → subtext)
+ * Matches HTML structure: d-block f2 text-bold → d-block text-small text-bold → d-block text-small color-fg-muted
  * @param {CanvasRenderingContext2D} ctx - Canvas context
- * @param {string} value - Main value
- * @param {string} label - Label text
- * @param {string} subtext - Subtext
+ * @param {string} value - Main value (large, green, bold)
+ * @param {string} label - Label text (small, bold, white)
+ * @param {string} subtext - Subtext (small, gray, date range)
  * @param {number} x - X position
  * @param {number} y - Y position
- * @param {number} width - Width
- * @param {number} height - Height
  */
-function drawStatItem(ctx, value, label, subtext, x, y, width, height) {
-  // Value (large green number)
-  ctx.fillStyle = "#2ea043";
-  ctx.font =
-    'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(value, x, y + 25);
+function drawFlexStatItem(ctx, value, label, subtext, x, y) {
+  // Value (24px, weight 600, green)
+  ctx.fillStyle = "#2BD853";
+  ctx.font = '600 24px "Segoe UI", sans-serif';
+  ctx.fillText(value, x, y + 22);
 
-  // Label (bold white)
-  ctx.fillStyle = "#e6edf3";
-  ctx.font =
-    'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(label, x, y + 45);
+  // Label (12px, weight 600, white)
+  ctx.fillStyle = "#ffffff";
+  ctx.font = '600 12px "Segoe UI", sans-serif';
+  ctx.fillText(label, x, y + 38);
 
-  // Subtext (gray, smaller)
-  ctx.fillStyle = "#8b949e";
-  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  const lines = subtext.split(" → ");
-  if (lines.length === 2) {
-    ctx.fillText(lines[0], x, y + 60);
-    ctx.fillText(`→ ${lines[1]}`, x, y + 72);
-  } else {
-    ctx.fillText(subtext, x, y + 60);
+  // Subtext (12px, weight 400, gray) - single line
+  if (subtext && subtext.length > 0) {
+    ctx.fillStyle = "#b7bdc8";
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.fillText(subtext, x, y + 54);
   }
 }
