@@ -118,6 +118,33 @@ async function cacheImage(cacheKey, imageBuffer) {
 }
 
 /**
+ * Track API usage analytics
+ * @param {Object} params - Request parameters
+ * @param {boolean} cacheHit - Whether request was served from cache
+ * @returns {Promise<void>}
+ */
+async function trackAnalytics(params, cacheHit) {
+  try {
+    const { error } = await supabase.from("api_analytics").insert({
+      username: params.username,
+      theme: params.theme || "github",
+      width: params.width || 1000,
+      height: params.height || 600,
+      stats: params.stats || false,
+      credit: params.credit || false,
+      year: params.year || new Date().getFullYear(),
+      cache_hit: cacheHit,
+    });
+
+    if (error) {
+      console.error("Analytics tracking error:", error);
+    }
+  } catch (error) {
+    console.error("Analytics tracking error:", error);
+  }
+}
+
+/**
  * Parse query parameters from URL
  * @param {string} search
  * @returns {Object}
@@ -266,12 +293,21 @@ async function handleRequest(req, res) {
       const cachedImage = await getCachedImage(cacheKey);
       if (cachedImage) {
         console.log(`[CACHE HIT] ${params.username} - Serving from Supabase`);
+        // Track analytics (don't wait)
+        trackAnalytics(params, true).catch((err) =>
+          console.error("Analytics error:", err),
+        );
         return sendPNGResponse(res, cachedImage, true);
       }
 
       // Generate new graph
       console.log(`[CACHE MISS] ${params.username} - Generating new graph...`);
       const imageBuffer = await generateGraph(params);
+
+      // Track analytics (don't wait)
+      trackAnalytics(params, false).catch((err) =>
+        console.error("Analytics error:", err),
+      );
 
       // Save to Supabase cache (don't wait)
       cacheImage(cacheKey, imageBuffer)
@@ -286,6 +322,38 @@ async function handleRequest(req, res) {
       return sendPNGResponse(res, imageBuffer, false);
     } catch (error) {
       console.error("Error:", error);
+      return sendErrorResponse(res, 500, error.message);
+    }
+  }
+
+  // Analytics API endpoint
+  if (url.pathname === "/api/analytics") {
+    try {
+      // Fetch both daily and lifetime stats in parallel
+      const [dailyResult, lifetimeResult] = await Promise.all([
+        supabase.rpc("get_daily_stats", { days_back: 30 }),
+        supabase.rpc("get_lifetime_stats"),
+      ]);
+
+      if (dailyResult.error) {
+        console.error("Analytics fetch error:", dailyResult.error);
+        return sendErrorResponse(res, 500, "Failed to fetch analytics");
+      }
+
+      const analyticsData = JSON.stringify({
+        daily_stats: dailyResult.data || [],
+        lifetime_stats: lifetimeResult.data?.[0] || null,
+        updated_at: new Date().toISOString(),
+      });
+
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=300", // 5 minutes cache
+        "Access-Control-Allow-Origin": "*",
+      });
+      return res.end(analyticsData);
+    } catch (error) {
+      console.error("Analytics error:", error);
       return sendErrorResponse(res, 500, error.message);
     }
   }

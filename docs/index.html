@@ -326,6 +326,209 @@
       </li>
     </ul>
 
+    <h2>API Usage Statistics</h2>
+
+    <!-- Period Tabs -->
+    <div
+      style="
+        display: flex;
+        gap: 8px;
+        margin: 16px 0;
+        border-bottom: 1px solid #d0d7de;
+      "
+    >
+      <button
+        id="tab30days"
+        onclick="switchPeriod('30days')"
+        style="
+          padding: 8px 16px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          border-bottom: 3px solid #0969da;
+          font-weight: 600;
+          color: #0969da;
+        "
+      >
+        Last 30 Days
+      </button>
+      <button
+        id="tabLifetime"
+        onclick="switchPeriod('lifetime')"
+        style="
+          padding: 8px 16px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          border-bottom: 3px solid transparent;
+          color: #586069;
+        "
+      >
+        Lifetime
+      </button>
+    </div>
+
+    <!-- 30 Days View -->
+    <div id="view30days">
+      <p>Live usage statistics for the last 30 days:</p>
+      <canvas
+        id="analyticsChart"
+        style="max-height: 400px; margin: 20px 0"
+      ></canvas>
+      <div
+        id="analyticsStats"
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          margin: 20px 0;
+        "
+      >
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #0969da"
+            id="totalRequests"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Total Requests</div>
+        </div>
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #1a7f37"
+            id="uniqueUsers"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Unique Users</div>
+        </div>
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #8250df"
+            id="cacheHitRate"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Cache Hit Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lifetime View -->
+    <div id="viewLifetime" style="display: none">
+      <p>All-time usage statistics since launch:</p>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          margin: 20px 0;
+        "
+      >
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #0969da"
+            id="lifetimeTotalRequests"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Total Requests</div>
+        </div>
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #1a7f37"
+            id="lifetimeUniqueUsers"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Unique Users</div>
+        </div>
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #8250df"
+            id="lifetimeCacheHitRate"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Cache Hit Rate</div>
+        </div>
+        <div
+          style="
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+          "
+        >
+          <div
+            style="font-size: 2em; font-weight: bold; color: #bf3989"
+            id="lifetimeCacheHits"
+          >
+            -
+          </div>
+          <div style="color: #586069; margin-top: 4px">Total Cache Hits</div>
+        </div>
+      </div>
+      <div
+        style="
+          background: #f6f8fa;
+          padding: 16px;
+          border-radius: 6px;
+          margin: 16px 0;
+        "
+      >
+        <div style="color: #586069; margin-bottom: 8px">First Request</div>
+        <div
+          style="font-size: 1.2em; font-weight: 600; color: #24292f"
+          id="lifetimeFirstRequest"
+        >
+          -
+        </div>
+      </div>
+    </div>
+
     <h2>Source</h2>
     <p style="display: flex; align-items: center; gap: 12px">
       <img
@@ -344,5 +547,179 @@
         >
       </span>
     </p>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+      let currentPeriod = "30days";
+
+      // Switch between 30 days and lifetime views
+      function switchPeriod(period) {
+        currentPeriod = period;
+
+        // Update tabs
+        document.getElementById("tab30days").style.borderBottomColor =
+          period === "30days" ? "#0969da" : "transparent";
+        document.getElementById("tab30days").style.color =
+          period === "30days" ? "#0969da" : "#586069";
+        document.getElementById("tab30days").style.fontWeight =
+          period === "30days" ? "600" : "normal";
+
+        document.getElementById("tabLifetime").style.borderBottomColor =
+          period === "lifetime" ? "#0969da" : "transparent";
+        document.getElementById("tabLifetime").style.color =
+          period === "lifetime" ? "#0969da" : "#586069";
+        document.getElementById("tabLifetime").style.fontWeight =
+          period === "lifetime" ? "600" : "normal";
+
+        // Update views
+        document.getElementById("view30days").style.display =
+          period === "30days" ? "block" : "none";
+        document.getElementById("viewLifetime").style.display =
+          period === "lifetime" ? "block" : "none";
+      }
+
+      // Fetch and display analytics
+      async function loadAnalytics() {
+        try {
+          const response = await fetch("/api/analytics");
+          if (!response.ok) {
+            console.error("Failed to fetch analytics", response.status);
+            return;
+          }
+
+          const data = await response.json();
+          console.log("Analytics API Response:", data);
+          const stats = data.daily_stats || [];
+          const lifetime = data.lifetime_stats;
+          console.log("Daily stats count:", stats.length);
+          console.log("Lifetime stats:", lifetime);
+
+          // Update 30-day stats
+          if (stats.length === 0) {
+            document.getElementById("totalRequests").textContent = "0";
+            document.getElementById("uniqueUsers").textContent = "0";
+            document.getElementById("cacheHitRate").textContent = "0%";
+          } else {
+            const totalRequests = stats.reduce(
+              (sum, day) => sum + parseInt(day.total_requests || 0),
+              0,
+            );
+            const totalCacheHits = stats.reduce(
+              (sum, day) => sum + parseInt(day.cache_hits || 0),
+              0,
+            );
+            const cacheHitRate =
+              totalRequests > 0
+                ? ((totalCacheHits / totalRequests) * 100).toFixed(1)
+                : 0;
+
+            document.getElementById("totalRequests").textContent =
+              totalRequests.toLocaleString();
+            document.getElementById("uniqueUsers").textContent = stats
+              .reduce((sum, day) => sum + parseInt(day.unique_users || 0), 0)
+              .toLocaleString();
+            document.getElementById("cacheHitRate").textContent =
+              cacheHitRate + "%";
+
+            // Prepare chart data (reverse to show oldest to newest)
+            const chartData = stats.reverse();
+            const labels = chartData.map((day) =>
+              new Date(day.date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              }),
+            );
+            const requestData = chartData.map((day) =>
+              parseInt(day.total_requests || 0),
+            );
+            const cacheHitData = chartData.map((day) =>
+              parseInt(day.cache_hits || 0),
+            );
+
+            // Create chart
+            const ctx = document
+              .getElementById("analyticsChart")
+              .getContext("2d");
+            new Chart(ctx, {
+              type: "line",
+              data: {
+                labels: labels,
+                datasets: [
+                  {
+                    label: "Total Requests",
+                    data: requestData,
+                    borderColor: "#0969da",
+                    backgroundColor: "rgba(9, 105, 218, 0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                  {
+                    label: "Cache Hits",
+                    data: cacheHitData,
+                    borderColor: "#1a7f37",
+                    backgroundColor: "rgba(26, 127, 55, 0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: "top",
+                  },
+                  title: {
+                    display: false,
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      precision: 0,
+                    },
+                  },
+                },
+              },
+            });
+          }
+
+          // Update lifetime stats
+          if (lifetime) {
+            document.getElementById("lifetimeTotalRequests").textContent = (
+              parseInt(lifetime.total_requests) || 0
+            ).toLocaleString();
+            document.getElementById("lifetimeUniqueUsers").textContent = (
+              parseInt(lifetime.unique_users) || 0
+            ).toLocaleString();
+            document.getElementById("lifetimeCacheHitRate").textContent =
+              (parseFloat(lifetime.cache_hit_rate) || 0).toFixed(1) + "%";
+            document.getElementById("lifetimeCacheHits").textContent = (
+              parseInt(lifetime.total_cache_hits) || 0
+            ).toLocaleString();
+
+            if (lifetime.first_request) {
+              const firstDate = new Date(lifetime.first_request);
+              document.getElementById("lifetimeFirstRequest").textContent =
+                firstDate.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+            }
+          }
+        } catch (error) {
+          console.error("Error loading analytics:", error);
+        }
+      }
+
+      // Load analytics on page load
+      loadAnalytics();
+    </script>
   </body>
 </html>
