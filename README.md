@@ -1,6 +1,53 @@
-# <img src="icon-128.png" alt="logo" width="40" height="40" style="vertical-align: middle;"> Isometric Contributions
+# <img src="media/assets/icon-128.png" alt="logo" width="40" height="40" style="vertical-align: middle;"> Isometric Contributions
 
 Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Available as both a CLI tool and a fast, cached API server.
+
+## Examples
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="media/examples/output.png" width="300" alt="Default Theme"/><br/>
+      <b>Default</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-github.png" width="300" alt="GitHub Theme"/><br/>
+      <b>GitHub Theme</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-dark.png" width="300" alt="Dark Theme"/><br/>
+      <b>Dark Theme</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="media/examples/output-neon.png" width="300" alt="Neon Theme"/><br/>
+      <b>Neon Theme</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-ocean.png" width="300" alt="Ocean Theme"/><br/>
+      <b>Ocean Theme</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-minimal.png" width="300" alt="Minimal Theme"/><br/>
+      <b>Minimal Theme</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="media/examples/output-not-stats.png" width="300" alt="Without Stats"/><br/>
+      <b>Without Stats</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-no-credit.png" width="300" alt="With Credit"/><br/>
+      <b>With Credit</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-light.png" width="300" alt="Light Theme"/><br/>
+      <b>Light Theme</b>
+    </td>
+  </tr>
+</table>
 
 ## Features
 
