@@ -1,41 +1,84 @@
-# GitHub Isometric Contributions extension
+# Isometric Contributions Generator
 
-![Node.js CI](https://github.com/jasonlong/isometric-contributions/workflows/Node.js%20CI/badge.svg)
-[![Biome code style](https://img.shields.io/badge/code_style-Biome-60a5fa.svg)](https://biomejs.dev)
-
-This is a browser extension for Chrome/Brave and Firefox that lets you toggle between your regular GitHub contribution chart and an isometric pixel art version. It uses [obelisk.js](https://github.com/nosir/obelisk.js) for the isometric graphics.
-
-Besides being sort of neat looking, this view is interesting in that it highlights the differences between the number of contributions with more granularity. This isn't meant to completely replace the standard 2D graph though, because in most ways it is actually less useful. For example, there are no axis labels, shorter bars can be hidden behind taller ones, you can't hover over a bar to see the day and count, etc.
-
-<img src="img/preview.png" width="1052" />
-
-<img src="img/preview-dark.png" width="1052" />
+Generate beautiful 3D isometric visualizations of GitHub contribution graphs.
 
 ## Installation
 
-### Chrome/Brave
+```bash
+npm install
+```
 
-[Install from the Chrome Web Store](https://chrome.google.com/webstore/detail/isometric-contributions/mjoedlfflcchnleknnceiplgaeoegien?hl=en&gl=US)
+## Usage
 
-### Firefox
+Generate an isometric contribution graph for any GitHub user:
 
-[Install from Mozilla Add-ons site](https://addons.mozilla.org/en-US/firefox/addon/github-isometric-contributions/)
+```bash
+npm run generate -- <username> [year] [output]
+```
 
-### Microsoft Edge
+### Examples
 
-[Install from Microsoft Edge Add-ons site](https://microsoftedge.microsoft.com/addons/detail/github-isometric-contribu/hcicbpfcbdpfgibhlbphodkcbojakpej)
+```bash
+# Generate current year
+npm run generate -- octocat
 
-## Contributing
+# Generate for specific year
+npm run generate -- octocat 2025
 
-**_Note that I don't currently have any plans for adding new features to the extension. Please contact me before submitting a PR with new functionality._**
+# Specify output filename
+npm run generate -- octocat 2025 my-graph.png
+```
 
-If you want to hack on the extension, you'll need to install it manually. First clone or fork this repo. Then, on your Chrome Extensions page, make sure "Developer mode" is checked. You can then click the "Load unpacked extension..." button and browse to the `src` directory of this repo.
+Or use directly:
 
-<img src="img/dev-mode.png" width="981" />
+```bash
+node generate.js username 2025 output.png
+```
 
-To hack on the extension, you'll first need to make sure you've installed it in Developer mode (see above). Once you've made changes to the extension, go back to the Extensions page and click the Reload link under the extension entry.
+## Output
 
-<img src="img/reload-link.png" width="410" />
+Generates PNG images with:
+- **Resolution**: 1000x600 pixels
+- **Format**: PNG with transparency
+- **Size**: ~20-30 KB
+
+### Statistics Displayed
+
+- Total contributions
+- Best day (max contributions)
+- Average per day
+- Longest streak
+- Current streak
+
+## API Usage
+
+### Fetch Contributions
+
+```javascript
+import { fetchContributions, parseContributionsData } from './src/api-client.js'
+
+const data = await fetchContributions('username', 2025)
+const days = parseContributionsData(data)
+```
+
+### Render Image
+
+```javascript
+import { renderIsometricChart, exportToPNG } from './src/renderer.js'
+import { writeFileSync } from 'fs'
+
+const canvas = renderIsometricChart(days, {
+  width: 1000,
+  height: 600
+})
+
+const buffer = exportToPNG(canvas)
+writeFileSync('output.png', buffer)
+```
+
+## Data Source
+
+Uses the [GitHub Contributions API](https://github-contributions-api.jogruber.de/)
 
 ## License
 
