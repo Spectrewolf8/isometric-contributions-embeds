@@ -25,7 +25,7 @@ const STYLE_CONFIG = {
     color: "#24292f",
     fontFamily: "Segoe UI",
     fontSize: 16,
-    fontWeight: "400",
+    fontWeight: "600",
     lineHeight: 24,
   },
 
@@ -84,7 +84,7 @@ const STYLE_CONFIG = {
   box: {
     backgroundColor: "rgba(22, 27, 34, 0.6)",
     borderColor: "rgba(48, 54, 61, 0.6)",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     shadowColor: "rgba(0, 0, 0, 0.4)",
     shadowBlur: 10,
@@ -94,9 +94,9 @@ const STYLE_CONFIG = {
 
   // Dimensions
   dimensions: {
-    contributionsBoxWidth: 370,
-    contributionsBoxHeight: 90,
-    streaksBoxWidth: 270,
+    contributionsBoxWidth: 316,
+    contributionsBoxHeight: 84,
+    streaksBoxWidth: 254,
     streaksBoxHeight: 80,
     titleHeight: 24,
     averageBottomMargin: 16,
