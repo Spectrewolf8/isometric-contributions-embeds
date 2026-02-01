@@ -7,7 +7,10 @@
     "node": ">=22.0"
   },
   "scripts": {
-    "generate": "node generate.js"
+    "generate": "node generate.js",
+    "server": "node server.js",
+    "dev": "node --watch server.js",
+    "test:api": "node test-api.js"
   },
   "dependencies": {
     "canvas": "^3.0.1",

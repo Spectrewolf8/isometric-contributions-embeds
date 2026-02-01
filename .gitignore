@@ -12,3 +12,7 @@ dist
 artifacts
 .env
 error-screenshot.png
+
+# API Cache
+.cache/*
+
