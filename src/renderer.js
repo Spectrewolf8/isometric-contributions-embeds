@@ -180,8 +180,9 @@ export function renderIsometricChart(days, options = {}) {
 
       // Get color from theme based on contribution level
       const level = day.level || 0;
-      const themeColor = STYLE_CONFIG.graph?.colors?.[`level${level}`] || day.color;
-      const colorHex = themeColor.replace('#', '');
+      const themeColor =
+        STYLE_CONFIG.graph?.colors?.[`level${level}`] || day.color;
+      const colorHex = themeColor.replace("#", "");
 
       const dimension = new obelisk.CubeDimension(
         cubeSize,
