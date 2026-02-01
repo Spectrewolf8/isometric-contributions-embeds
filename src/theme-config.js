@@ -277,7 +277,7 @@ export const NEON_THEME = {
     lineHeight: 18,
   },
   averageText: {
-    color: "#00ffff",
+    color: "#4d0099",
     fontFamily: "Segoe UI",
     fontSize: 12,
     fontWeight: "400",
