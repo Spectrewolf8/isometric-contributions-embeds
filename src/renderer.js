@@ -122,11 +122,7 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
  * @returns {Canvas} Canvas with rendered graph
  */
 export function renderIsometricChart(days, options = {}) {
-  const {
-    width = 1000,
-    height = 600,
-    username = null,
-  } = options;
+  const { width = 1000, height = 600, username = null } = options;
 
   // Scale cube size based on canvas dimensions (base size 16 for 1000x600)
   const baseWidth = 1000;
@@ -168,7 +164,7 @@ export function renderIsometricChart(days, options = {}) {
   // Use proportional positioning: 13% from left, 15% from top
   const offsetX = width * 0.13;
   const offsetY = height * 0.15;
-  
+
   // Setup obelisk with scaled position
   const point = new obelisk.Point(offsetX, offsetY);
   const pixelView = new obelisk.PixelView(canvas, point);
@@ -362,13 +358,29 @@ export function renderWithStats(days, options = {}) {
   const scaleFactor = Math.min(canvas.width / 1000, canvas.height / 600);
 
   // Draw contributions box (top right) - scaled and positioned
-  const contributionsBoxWidth = STYLE_CONFIG.dimensions.contributionsBoxWidth * scaleFactor;
+  const contributionsBoxWidth =
+    STYLE_CONFIG.dimensions.contributionsBoxWidth * scaleFactor;
   const margin = 25 * scaleFactor;
-  drawContributionsBox(ctx, stats, canvas.width - contributionsBoxWidth - margin, margin, scaleFactor);
+  drawContributionsBox(
+    ctx,
+    stats,
+    canvas.width - contributionsBoxWidth - margin,
+    margin,
+    scaleFactor,
+  );
 
   // Draw streaks box (bottom left) - scaled and positioned
-  const streaksBoxHeight = STYLE_CONFIG.dimensions.streaksBoxHeight + STYLE_CONFIG.dimensions.titleHeight + STYLE_CONFIG.dimensions.averageBottomMargin;
-  drawStreaksBox(ctx, stats, margin, canvas.height - streaksBoxHeight * scaleFactor - margin, scaleFactor);
+  const streaksBoxHeight =
+    STYLE_CONFIG.dimensions.streaksBoxHeight +
+    STYLE_CONFIG.dimensions.titleHeight +
+    STYLE_CONFIG.dimensions.averageBottomMargin;
+  drawStreaksBox(
+    ctx,
+    stats,
+    margin,
+    canvas.height - streaksBoxHeight * scaleFactor - margin,
+    scaleFactor,
+  );
 
   // Draw username credit if provided
   if (username) {
@@ -409,7 +421,13 @@ function drawContributionsBox(ctx, stats, x, y, scale = 1) {
   // Box background (transparent/semi-transparent)
   ctx.fillStyle = STYLE_CONFIG.box.backgroundColor;
   ctx.beginPath();
-  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius * scale);
+  ctx.roundRect(
+    x,
+    boxY,
+    boxWidth,
+    boxHeight,
+    STYLE_CONFIG.box.borderRadius * scale,
+  );
   ctx.fill();
 
   // Reset shadow
@@ -463,11 +481,12 @@ function drawContributionsBox(ctx, stats, x, y, scale = 1) {
   );
 
   // Average (outside, below the box, right-aligned)
-  const avgY = boxY + boxHeight + STYLE_CONFIG.dimensions.averageBottomMargin * scale;
+  const avgY =
+    boxY + boxHeight + STYLE_CONFIG.dimensions.averageBottomMargin * scale;
   const avgTextFontSize = STYLE_CONFIG.averageText.fontSize * scale;
   const avgValueFontSize = STYLE_CONFIG.averageValue.fontSize * scale;
   const avgUnitFontSize = STYLE_CONFIG.averageUnit.fontSize * scale;
-  
+
   ctx.fillStyle = STYLE_CONFIG.averageText.color;
   ctx.font = `${STYLE_CONFIG.averageText.fontWeight} ${avgTextFontSize}px "${STYLE_CONFIG.averageText.fontFamily}", sans-serif`;
   const avgText = "Average:";
@@ -526,7 +545,13 @@ function drawStreaksBox(ctx, stats, x, y, scale = 1) {
   // Box background (transparent/semi-transparent)
   ctx.fillStyle = STYLE_CONFIG.box.backgroundColor;
   ctx.beginPath();
-  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius * scale);
+  ctx.roundRect(
+    x,
+    boxY,
+    boxWidth,
+    boxHeight,
+    STYLE_CONFIG.box.borderRadius * scale,
+  );
   ctx.fill();
 
   // Reset shadow
@@ -626,7 +651,7 @@ function drawUsernameCredit(ctx, username, canvasWidth, canvasHeight) {
   const fontSize = 11 * scaleFactor;
   const fontFamily = STYLE_CONFIG.subtext?.fontFamily || "Segoe UI";
   ctx.font = `${fontSize}px "${fontFamily}", sans-serif`;
-  
+
   // Very subtle color with low opacity
   const baseColor = STYLE_CONFIG.subtext?.color || "#768390";
   ctx.fillStyle = baseColor;

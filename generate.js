@@ -27,8 +27,14 @@ const hasCreditFlag = args.includes("--credit");
 // Parse width and height flags
 const widthIndex = args.indexOf("--width");
 const heightIndex = args.indexOf("--height");
-const customWidth = widthIndex >= 0 && args[widthIndex + 1] ? Number.parseInt(args[widthIndex + 1], 10) : 1000;
-const customHeight = heightIndex >= 0 && args[heightIndex + 1] ? Number.parseInt(args[heightIndex + 1], 10) : 600;
+const customWidth =
+  widthIndex >= 0 && args[widthIndex + 1]
+    ? Number.parseInt(args[widthIndex + 1], 10)
+    : 1000;
+const customHeight =
+  heightIndex >= 0 && args[heightIndex + 1]
+    ? Number.parseInt(args[heightIndex + 1], 10)
+    : 600;
 
 // Determine output filename
 let output;
