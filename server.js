@@ -3,17 +3,15 @@
 /**
  * Minimal and Fast Isometric Contributions API Server
  * Features:
- * - Daily caching per username (one generation per day)
+ * - Daily caching per username (one generation per day) using Supabase Storage
  * - Multiple fetches served from cache
  * - Customizable query parameters for themes, dimensions, stats
  * - PNG image output
  */
 
+import "dotenv/config";
 import { createServer } from "node:http";
-import { readFileSync, existsSync, mkdirSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { writeFile } from "node:fs/promises";
+import { createClient } from "@supabase/supabase-js";
 import {
   fetchContributions,
   parseContributionsData,
@@ -24,14 +22,14 @@ import {
   exportToPNG,
 } from "./src/renderer.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CACHE_DIR = join(__dirname, ".cache");
 const PORT = process.env.PORT || 3000;
+const BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME || "isometric-cache";
 
-// Ensure cache directory exists
-if (!existsSync(CACHE_DIR)) {
-  mkdirSync(CACHE_DIR, { recursive: true });
-}
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY,
+);
 
 /**
  * Generate cache key for a request
@@ -43,25 +41,55 @@ function getCacheKey(username, params) {
   const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
   const paramsStr = JSON.stringify(params);
   const hash = Buffer.from(paramsStr).toString("base64").replace(/[/+=]/g, "");
-  return `${username}_${date}_${hash}.png`;
+  return `${username}/${date}/${hash}.png`;
 }
 
 /**
- * Check if cached file exists and is valid (created today)
+ * Get cached image from Supabase Storage
  * @param {string} cacheKey
- * @returns {boolean}
+ * @returns {Promise<Buffer|null>}
  */
-function isCacheValid(cacheKey) {
-  const cachePath = join(CACHE_DIR, cacheKey);
-  if (!existsSync(cachePath)) {
-    return false;
+async function getCachedImage(cacheKey) {
+  try {
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .download(cacheKey);
+
+    if (error) {
+      return null;
+    }
+
+    // Convert Blob to Buffer
+    const arrayBuffer = await data.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (error) {
+    console.error("Cache retrieval error:", error);
+    return null;
   }
+}
 
-  const stats = statSync(cachePath);
-  const today = new Date().toISOString().split("T")[0];
-  const fileDate = stats.mtime.toISOString().split("T")[0];
+/**
+ * Store image in Supabase Storage
+ * @param {string} cacheKey
+ * @param {Buffer} imageBuffer
+ * @returns {Promise<void>}
+ */
+async function cacheImage(cacheKey, imageBuffer) {
+  try {
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(cacheKey, imageBuffer, {
+        contentType: "image/png",
+        cacheControl: "86400", // 24 hours
+        upsert: true, // Overwrite if exists
+      });
 
-  return today === fileDate;
+    if (error) {
+      console.error("Cache storage error:", error);
+    }
+  } catch (error) {
+    console.error("Cache storage error:", error);
+  }
 }
 
 /**
@@ -127,27 +155,14 @@ async function generateGraph(params) {
  * @param {http.ServerResponse} res
  * @param {Buffer} imageBuffer
  * @param {boolean} fromCache
- * @param {string} cachePath - Path to cache file for Last-Modified header
  */
-function sendPNGResponse(
-  res,
-  imageBuffer,
-  fromCache = false,
-  cachePath = null,
-) {
+function sendPNGResponse(res, imageBuffer, fromCache = false) {
   const headers = {
     "Content-Type": "image/png",
     "Content-Length": imageBuffer.length,
     "Cache-Control": "public, max-age=3600, must-revalidate", // 1 hour with revalidation
     "X-Cache": fromCache ? "HIT" : "MISS",
   };
-
-  // Add Last-Modified header if serving from cache
-  if (fromCache && cachePath && existsSync(cachePath)) {
-    const stats = statSync(cachePath);
-    headers["Last-Modified"] = stats.mtime.toUTCString();
-    headers["ETag"] = `"${stats.mtime.getTime()}-${stats.size}"`;
-  }
 
   res.writeHead(200, headers);
   res.end(imageBuffer);
@@ -393,25 +408,29 @@ async function handleRequest(req, res) {
 
       // Generate cache key
       const cacheKey = getCacheKey(params.username, params);
-      const cachePath = join(CACHE_DIR, cacheKey);
 
       // Check cache
-      if (isCacheValid(cacheKey)) {
-        console.log(`[CACHE HIT] ${params.username} - Serving from cache`);
-        const imageBuffer = readFileSync(cachePath);
-        return sendPNGResponse(res, imageBuffer, true, cachePath);
+      const cachedImage = await getCachedImage(cacheKey);
+      if (cachedImage) {
+        console.log(`[CACHE HIT] ${params.username} - Serving from Supabase`);
+        return sendPNGResponse(res, cachedImage, true);
       }
 
       // Generate new graph
       console.log(`[CACHE MISS] ${params.username} - Generating new graph...`);
       const imageBuffer = await generateGraph(params);
 
-      // Save to cache
-      await writeFile(cachePath, imageBuffer);
-      console.log(`[CACHED] ${params.username} - Saved to cache`);
+      // Save to Supabase cache (don't wait)
+      cacheImage(cacheKey, imageBuffer)
+        .then(() =>
+          console.log(`[CACHED] ${params.username} - Saved to Supabase`),
+        )
+        .catch((err) =>
+          console.error(`[CACHE ERROR] ${params.username}:`, err),
+        );
 
       // Send response
-      return sendPNGResponse(res, imageBuffer, false, cachePath);
+      return sendPNGResponse(res, imageBuffer, false);
     } catch (error) {
       console.error("Error:", error);
       return sendErrorResponse(res, 500, error.message);
@@ -432,7 +451,7 @@ server.listen(PORT, () => {
 ╠════════════════════════════════════════════════════════════╣
 ║  Status:     Running                                       ║
 ║  Port:       ${PORT.toString().padEnd(46)}║
-║  Cache Dir:  ${CACHE_DIR.split("\\").pop().padEnd(46)}║
+║  Storage:    Supabase (${BUCKET_NAME})${" ".repeat(46 - 19 - BUCKET_NAME.length)}║
 ║                                                            ║
 ║  Documentation: http://localhost:${PORT}/                     ║
 ║  API Endpoint:  http://localhost:${PORT}/api/graph            ║
@@ -440,6 +459,7 @@ server.listen(PORT, () => {
 ╚════════════════════════════════════════════════════════════╝
   `);
   console.log("Press Ctrl+C to stop the server\n");
+  console.log("💡 Cache cleanup runs automatically via Supabase pg_cron\n");
 });
 
 // Graceful shutdown

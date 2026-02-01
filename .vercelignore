@@ -1,0 +1,14 @@
+.cache
+node_modules
+.env
+.env.local
+\*.log
+.DS_Store
+examples
+test-api.js
+test.html
+generate.js
+generate-all-themes.js
+worker.js
+wrangler.toml
+DEPLOYMENT.md
