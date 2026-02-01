@@ -57,7 +57,7 @@ export const GITHUB_THEME = {
   box: {
     backgroundColor: "rgb(22, 27, 34)",
     borderColor: "rgb(48, 54, 61)",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     shadowColor: "rgba(0, 0, 0, 0.4)",
     shadowBlur: 10,
@@ -137,7 +137,7 @@ export const DARK_THEME = {
   box: {
     backgroundColor: "rgb(13, 17, 23)",
     borderColor: "rgb(48, 54, 61)",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     shadowColor: "rgba(0, 0, 0, 0.6)",
     shadowBlur: 12,
@@ -217,7 +217,7 @@ export const LIGHT_THEME = {
   box: {
     backgroundColor: "rgb(255, 255, 255)",
     borderColor: "rgb(208, 215, 222)",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     shadowColor: "rgba(31, 35, 40, 0.15)",
     shadowBlur: 8,
@@ -376,8 +376,8 @@ export const MINIMAL_THEME = {
   },
   box: {
     backgroundColor: "rgb(255, 255, 255)",
-    borderColor: "rgb(230, 230, 230)",
-    borderWidth: 1,
+    borderColor: "rgb(51, 51, 51)",
+    borderWidth: 2,
     borderRadius: 8,
     shadowColor: "rgba(0, 0, 0, 0.1)",
     shadowBlur: 5,
@@ -457,7 +457,7 @@ export const OCEAN_THEME = {
   box: {
     backgroundColor: "rgb(7, 89, 133)",
     borderColor: "rgb(34, 211, 238)",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 8,
     shadowColor: "rgba(6, 182, 212, 0.3)",
     shadowBlur: 10,
