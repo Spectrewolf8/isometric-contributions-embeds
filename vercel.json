@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["fonts/**", "src/**"]
+      }
     }
   ],
   "routes": [
@@ -13,6 +16,8 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
-  }
+    "NODE_ENV": "production",
+    "NODE_OPTIONS": "--experimental-vm-modules"
+  },
+  "installCommand": "npm install --legacy-peer-deps"
 }
