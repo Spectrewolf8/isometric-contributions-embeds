@@ -249,7 +249,7 @@ export const LIGHT_THEME = {
  */
 export const NEON_THEME = {
   title: {
-    color: "#00ffff",
+    color: "#4d0099",
     fontFamily: "Segoe UI",
     fontSize: 16,
     fontWeight: "600",

@@ -447,7 +447,7 @@ function sendDocumentation(res) {
     <ul>
         <li><a href="/api/graph?username=spectrewolf8&stats=true" target="_blank">GitHub theme with stats →</a></li>
         <li><a href="/api/graph?username=spectrewolf8&theme=dark&stats=true" target="_blank">Dark theme with stats →</a></li>
-        <li><a href="/api/graph?username=spectrewolf8&theme=neon&width=1200&height=700" target="_blank">Neon theme (large) →</a></li>
+        <li><a href="/api/graph?username=spectrewolf8&theme=neon&width=1200&height=700&year=2025&credit=true&stats=true" target="_blank">Neon theme (large) →</a></li>
     </ul>
 </body>
 </html>`;

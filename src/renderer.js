@@ -129,8 +129,10 @@ export function renderIsometricChart(days, options = {}) {
   const baseHeight = 600;
   const baseCubeSize = 16;
   const scale = Math.min(width / baseWidth, height / baseHeight);
-  const cubeSize = baseCubeSize * scale;
-  const maxHeight = 100 * scale;
+  const rawCubeSize = baseCubeSize * scale;
+  const cubeSize = Math.max(6, Math.round(rawCubeSize / 2) * 2);
+  const cubeScale = cubeSize / baseCubeSize;
+  const maxHeight = 100 * cubeScale;
 
   // Create canvas
   const canvas = createCanvas(width, height);
@@ -170,8 +172,8 @@ export function renderIsometricChart(days, options = {}) {
   const pixelView = new obelisk.PixelView(canvas, point);
 
   // Scale the offsets to match cube size scaling
-  const GH_OFFSET = 14 * scale;
-  const DAY_OFFSET = 13 * scale;
+  const GH_OFFSET = 14 * cubeScale;
+  const DAY_OFFSET = 13 * cubeScale;
   let transform = GH_OFFSET;
 
   // Render each week
@@ -185,10 +187,11 @@ export function renderIsometricChart(days, options = {}) {
       const y = dayOffsetY / GH_OFFSET;
       dayOffsetY += DAY_OFFSET;
 
-      let cubeHeight = 3 * scale;
+      let cubeHeight = Math.round(3 * cubeScale);
       if (maxCount > 0) {
-        cubeHeight += Number.parseInt((maxHeight / maxCount) * day.count, 10);
+        cubeHeight += Math.round((maxHeight / maxCount) * day.count);
       }
+      cubeHeight = Math.max(cubeHeight, 3);
 
       // Get color from theme based on contribution level
       const level = day.level || 0;
