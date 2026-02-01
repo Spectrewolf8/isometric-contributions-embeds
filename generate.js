@@ -24,6 +24,12 @@ const year =
 const hasStatsFlag = args.includes("--stats");
 const hasCreditFlag = args.includes("--credit");
 
+// Parse width and height flags
+const widthIndex = args.indexOf("--width");
+const heightIndex = args.indexOf("--height");
+const customWidth = widthIndex >= 0 && args[widthIndex + 1] ? Number.parseInt(args[widthIndex + 1], 10) : 1000;
+const customHeight = heightIndex >= 0 && args[heightIndex + 1] ? Number.parseInt(args[heightIndex + 1], 10) : 600;
+
 // Determine output filename
 let output;
 if (args.length >= 3 && !args[2].startsWith("--")) {
@@ -34,14 +40,16 @@ if (args.length >= 3 && !args[2].startsWith("--")) {
 
 if (!username) {
   console.error(
-    "Usage: node generate.js <username> [year] [output] [--stats] [--credit]",
+    "Usage: node generate.js <username> [year] [output] [--stats] [--credit] [--width W] [--height H]",
   );
   console.error(
-    "Example: node generate.js spectrewolf8 2025 graph.png --stats --credit",
+    "Example: node generate.js spectrewolf8 2025 graph.png --stats --credit --width 1920 --height 1080",
   );
   console.error("\nOptions:");
-  console.error("  --stats    Include statistics overlay on the image");
-  console.error("  --credit   Show username in bottom right corner");
+  console.error("  --stats          Include statistics overlay on the image");
+  console.error("  --credit         Show username in bottom right corner");
+  console.error("  --width <px>     Canvas width in pixels (default: 1000)");
+  console.error("  --height <px>    Canvas height in pixels (default: 600)");
   process.exit(1);
 }
 
@@ -74,8 +82,8 @@ async function main() {
     // Render isometric chart
     console.log("\nRendering isometric chart...");
     const renderOptions = {
-      width: 1000,
-      height: 1000,
+      width: customWidth,
+      height: customHeight,
       username: hasCreditFlag ? username : null,
     };
     const canvas = hasStatsFlag

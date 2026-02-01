@@ -125,10 +125,16 @@ export function renderIsometricChart(days, options = {}) {
   const {
     width = 1000,
     height = 600,
-    cubeSize = 16,
-    maxHeight = 100,
     username = null,
   } = options;
+
+  // Scale cube size based on canvas dimensions (base size 16 for 1000x600)
+  const baseWidth = 1000;
+  const baseHeight = 600;
+  const baseCubeSize = 16;
+  const scale = Math.min(width / baseWidth, height / baseHeight);
+  const cubeSize = baseCubeSize * scale;
+  const maxHeight = 100 * scale;
 
   // Create canvas
   const canvas = createCanvas(width, height);
@@ -157,25 +163,33 @@ export function renderIsometricChart(days, options = {}) {
     }, {}),
   );
 
-  // Setup obelisk
-  const point = new obelisk.Point(130, 90);
+  // Position graph with proper centering that scales with canvas size
+  // Original position for 1000x600 was (130, 90) which provided good visual balance
+  // Use proportional positioning: 13% from left, 15% from top
+  const offsetX = width * 0.13;
+  const offsetY = height * 0.15;
+  
+  // Setup obelisk with scaled position
+  const point = new obelisk.Point(offsetX, offsetY);
   const pixelView = new obelisk.PixelView(canvas, point);
 
-  const GH_OFFSET = 14;
+  // Scale the offsets to match cube size scaling
+  const GH_OFFSET = 14 * scale;
+  const DAY_OFFSET = 13 * scale;
   let transform = GH_OFFSET;
 
   // Render each week
   for (const week of weeks) {
     const x = transform / (GH_OFFSET + 1);
     transform += GH_OFFSET;
-    let offsetY = 0;
+    let dayOffsetY = 0;
 
     // Render each day in the week
     for (const day of week) {
-      const y = offsetY / GH_OFFSET;
-      offsetY += 13;
+      const y = dayOffsetY / GH_OFFSET;
+      dayOffsetY += DAY_OFFSET;
 
-      let cubeHeight = 3;
+      let cubeHeight = 3 * scale;
       if (maxCount > 0) {
         cubeHeight += Number.parseInt((maxHeight / maxCount) * day.count, 10);
       }
@@ -344,11 +358,17 @@ export function renderWithStats(days, options = {}) {
 
   const ctx = canvas.getContext("2d");
 
-  // Draw contributions box (top right)
-  drawContributionsBox(ctx, stats, canvas.width - 390, 25);
+  // Calculate scale factor based on canvas size (base size: 1000x600)
+  const scaleFactor = Math.min(canvas.width / 1000, canvas.height / 600);
 
-  // Draw streaks box (bottom left)
-  drawStreaksBox(ctx, stats, 25, canvas.height - 125);
+  // Draw contributions box (top right) - scaled and positioned
+  const contributionsBoxWidth = STYLE_CONFIG.dimensions.contributionsBoxWidth * scaleFactor;
+  const margin = 25 * scaleFactor;
+  drawContributionsBox(ctx, stats, canvas.width - contributionsBoxWidth - margin, margin, scaleFactor);
+
+  // Draw streaks box (bottom left) - scaled and positioned
+  const streaksBoxHeight = STYLE_CONFIG.dimensions.streaksBoxHeight + STYLE_CONFIG.dimensions.titleHeight + STYLE_CONFIG.dimensions.averageBottomMargin;
+  drawStreaksBox(ctx, stats, margin, canvas.height - streaksBoxHeight * scaleFactor - margin, scaleFactor);
 
   // Draw username credit if provided
   if (username) {
@@ -364,30 +384,32 @@ export function renderWithStats(days, options = {}) {
  * @param {Object} stats - Statistics object
  * @param {number} x - X position
  * @param {number} y - Y position
+ * @param {number} scale - Scale factor for responsive sizing
  */
-function drawContributionsBox(ctx, stats, x, y) {
-  const boxWidth = STYLE_CONFIG.dimensions.contributionsBoxWidth;
-  const boxHeight = STYLE_CONFIG.dimensions.contributionsBoxHeight;
-  const titleHeight = STYLE_CONFIG.dimensions.titleHeight;
+function drawContributionsBox(ctx, stats, x, y, scale = 1) {
+  const boxWidth = STYLE_CONFIG.dimensions.contributionsBoxWidth * scale;
+  const boxHeight = STYLE_CONFIG.dimensions.contributionsBoxHeight * scale;
+  const titleHeight = STYLE_CONFIG.dimensions.titleHeight * scale;
 
   // Title (outside, above the box) - aligned with left border of box
   ctx.fillStyle = STYLE_CONFIG.title.color;
-  ctx.font = getFontString(STYLE_CONFIG.title);
-  ctx.fillText("Contributions", x, y + 16);
+  const titleFontSize = STYLE_CONFIG.title.fontSize * scale;
+  ctx.font = `${STYLE_CONFIG.title.fontWeight} ${titleFontSize}px "${STYLE_CONFIG.title.fontFamily}", sans-serif`;
+  ctx.fillText("Contributions", x, y + 16 * scale);
 
   // Box starts below title
   const boxY = y + titleHeight;
 
   // Drop shadow
   ctx.shadowColor = STYLE_CONFIG.box.shadowColor;
-  ctx.shadowBlur = STYLE_CONFIG.box.shadowBlur;
-  ctx.shadowOffsetX = STYLE_CONFIG.box.shadowOffsetX;
-  ctx.shadowOffsetY = STYLE_CONFIG.box.shadowOffsetY;
+  ctx.shadowBlur = STYLE_CONFIG.box.shadowBlur * scale;
+  ctx.shadowOffsetX = STYLE_CONFIG.box.shadowOffsetX * scale;
+  ctx.shadowOffsetY = STYLE_CONFIG.box.shadowOffsetY * scale;
 
   // Box background (transparent/semi-transparent)
   ctx.fillStyle = STYLE_CONFIG.box.backgroundColor;
   ctx.beginPath();
-  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius);
+  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius * scale);
   ctx.fill();
 
   // Reset shadow
@@ -398,11 +420,11 @@ function drawContributionsBox(ctx, stats, x, y) {
 
   // Border
   ctx.strokeStyle = STYLE_CONFIG.box.borderColor;
-  ctx.lineWidth = STYLE_CONFIG.box.borderWidth;
+  ctx.lineWidth = STYLE_CONFIG.box.borderWidth * scale;
   ctx.stroke();
 
   // Stats row
-  const itemY = boxY + 12;
+  const itemY = boxY + 12 * scale;
 
   // Total
   drawFlexStatItem(
@@ -410,8 +432,9 @@ function drawContributionsBox(ctx, stats, x, y) {
     stats.countTotal.toString(),
     "Total",
     stats.datesTotal,
-    x + 16,
+    x + 16 * scale,
     itemY,
+    scale,
   );
 
   // This week
@@ -420,8 +443,9 @@ function drawContributionsBox(ctx, stats, x, y) {
     stats.weekCountTotal.toString(),
     "This week",
     stats.weekDatesTotal,
-    x + 130,
+    x + 130 * scale,
     itemY,
+    scale,
   );
 
   // Best day
@@ -433,36 +457,42 @@ function drawContributionsBox(ctx, stats, x, y) {
     stats.maxCount.toString(),
     "Best day",
     bestDayDate,
-    x + 250,
+    x + 250 * scale,
     itemY,
+    scale,
   );
 
   // Average (outside, below the box, right-aligned)
-  const avgY = boxY + boxHeight + STYLE_CONFIG.dimensions.averageBottomMargin;
+  const avgY = boxY + boxHeight + STYLE_CONFIG.dimensions.averageBottomMargin * scale;
+  const avgTextFontSize = STYLE_CONFIG.averageText.fontSize * scale;
+  const avgValueFontSize = STYLE_CONFIG.averageValue.fontSize * scale;
+  const avgUnitFontSize = STYLE_CONFIG.averageUnit.fontSize * scale;
+  
   ctx.fillStyle = STYLE_CONFIG.averageText.color;
-  ctx.font = getFontString(STYLE_CONFIG.averageText);
+  ctx.font = `${STYLE_CONFIG.averageText.fontWeight} ${avgTextFontSize}px "${STYLE_CONFIG.averageText.fontFamily}", sans-serif`;
   const avgText = "Average:";
   const avgNumText = stats.averageCount.toString();
   const dayText = "/ day";
 
   const dayWidth = ctx.measureText(dayText).width;
-  ctx.font = getFontString(STYLE_CONFIG.averageValue);
+  ctx.font = `${STYLE_CONFIG.averageValue.fontWeight} ${avgValueFontSize}px "${STYLE_CONFIG.averageValue.fontFamily}", sans-serif`;
   const numWidth = ctx.measureText(avgNumText).width;
-  ctx.font = getFontString(STYLE_CONFIG.averageText);
+  ctx.font = `${STYLE_CONFIG.averageText.fontWeight} ${avgTextFontSize}px "${STYLE_CONFIG.averageText.fontFamily}", sans-serif`;
   const avgWidth = ctx.measureText(avgText).width;
 
-  const totalWidth = avgWidth + 4 + numWidth + 4 + dayWidth;
+  const spacing = 4 * scale;
+  const totalWidth = avgWidth + spacing + numWidth + spacing + dayWidth;
   const startX = x + boxWidth - totalWidth;
 
   ctx.fillText(avgText, startX, avgY);
 
   ctx.fillStyle = STYLE_CONFIG.averageValue.color;
-  ctx.font = getFontString(STYLE_CONFIG.averageValue);
-  ctx.fillText(avgNumText, startX + avgWidth + 4, avgY);
+  ctx.font = `${STYLE_CONFIG.averageValue.fontWeight} ${avgValueFontSize}px "${STYLE_CONFIG.averageValue.fontFamily}", sans-serif`;
+  ctx.fillText(avgNumText, startX + avgWidth + spacing, avgY);
 
   ctx.fillStyle = STYLE_CONFIG.averageUnit.color;
-  ctx.font = getFontString(STYLE_CONFIG.averageUnit);
-  ctx.fillText(dayText, startX + avgWidth + 4 + numWidth + 4, avgY);
+  ctx.font = `${STYLE_CONFIG.averageUnit.fontWeight} ${avgUnitFontSize}px "${STYLE_CONFIG.averageUnit.fontFamily}", sans-serif`;
+  ctx.fillText(dayText, startX + avgWidth + spacing + numWidth + spacing, avgY);
 }
 
 /**
@@ -471,30 +501,32 @@ function drawContributionsBox(ctx, stats, x, y) {
  * @param {Object} stats - Statistics object
  * @param {number} x - X position
  * @param {number} y - Y position
+ * @param {number} scale - Scale factor for responsive sizing
  */
-function drawStreaksBox(ctx, stats, x, y) {
-  const boxWidth = STYLE_CONFIG.dimensions.streaksBoxWidth;
-  const boxHeight = STYLE_CONFIG.dimensions.streaksBoxHeight;
-  const titleHeight = STYLE_CONFIG.dimensions.titleHeight;
+function drawStreaksBox(ctx, stats, x, y, scale = 1) {
+  const boxWidth = STYLE_CONFIG.dimensions.streaksBoxWidth * scale;
+  const boxHeight = STYLE_CONFIG.dimensions.streaksBoxHeight * scale;
+  const titleHeight = STYLE_CONFIG.dimensions.titleHeight * scale;
 
   // Title (outside, above the box) - aligned with left border of box
   ctx.fillStyle = STYLE_CONFIG.title.color;
-  ctx.font = getFontString(STYLE_CONFIG.title);
-  ctx.fillText("Streaks", x, y + 16);
+  const titleFontSize = STYLE_CONFIG.title.fontSize * scale;
+  ctx.font = `${STYLE_CONFIG.title.fontWeight} ${titleFontSize}px "${STYLE_CONFIG.title.fontFamily}", sans-serif`;
+  ctx.fillText("Streaks", x, y + 16 * scale);
 
   // Box starts below title
   const boxY = y + titleHeight;
 
   // Drop shadow
   ctx.shadowColor = STYLE_CONFIG.box.shadowColor;
-  ctx.shadowBlur = STYLE_CONFIG.box.shadowBlur;
-  ctx.shadowOffsetX = STYLE_CONFIG.box.shadowOffsetX;
-  ctx.shadowOffsetY = STYLE_CONFIG.box.shadowOffsetY;
+  ctx.shadowBlur = STYLE_CONFIG.box.shadowBlur * scale;
+  ctx.shadowOffsetX = STYLE_CONFIG.box.shadowOffsetX * scale;
+  ctx.shadowOffsetY = STYLE_CONFIG.box.shadowOffsetY * scale;
 
   // Box background (transparent/semi-transparent)
   ctx.fillStyle = STYLE_CONFIG.box.backgroundColor;
   ctx.beginPath();
-  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius);
+  ctx.roundRect(x, boxY, boxWidth, boxHeight, STYLE_CONFIG.box.borderRadius * scale);
   ctx.fill();
 
   // Reset shadow
@@ -505,11 +537,11 @@ function drawStreaksBox(ctx, stats, x, y) {
 
   // Border
   ctx.strokeStyle = STYLE_CONFIG.box.borderColor;
-  ctx.lineWidth = STYLE_CONFIG.box.borderWidth;
+  ctx.lineWidth = STYLE_CONFIG.box.borderWidth * scale;
   ctx.stroke();
 
   // Stats row
-  const itemY = boxY + 12;
+  const itemY = boxY + 12 * scale;
 
   // Longest
   const longestDays = stats.streakLongest === 1 ? "day" : "days";
@@ -519,8 +551,9 @@ function drawStreaksBox(ctx, stats, x, y) {
     longestValue,
     "Longest",
     stats.datesLongest,
-    x + 16,
+    x + 16 * scale,
     itemY,
+    scale,
   );
 
   // Current
@@ -536,8 +569,9 @@ function drawStreaksBox(ctx, stats, x, y) {
     currentValue,
     "Current",
     currentSubtext,
-    x + 145,
+    x + 145 * scale,
     itemY,
+    scale,
   );
 }
 
@@ -550,23 +584,27 @@ function drawStreaksBox(ctx, stats, x, y) {
  * @param {string} subtext - Subtext (small, gray, date range)
  * @param {number} x - X position
  * @param {number} y - Y position
+ * @param {number} scale - Scale factor for responsive sizing
  */
-function drawFlexStatItem(ctx, value, label, subtext, x, y) {
+function drawFlexStatItem(ctx, value, label, subtext, x, y, scale = 1) {
   // Value (large number)
   ctx.fillStyle = STYLE_CONFIG.value.color;
-  ctx.font = getFontString(STYLE_CONFIG.value);
-  ctx.fillText(value, x, y + 22);
+  const valueFontSize = STYLE_CONFIG.value.fontSize * scale;
+  ctx.font = `${STYLE_CONFIG.value.fontWeight} ${valueFontSize}px "${STYLE_CONFIG.value.fontFamily}", sans-serif`;
+  ctx.fillText(value, x, y + 22 * scale);
 
   // Label (Total, This week, etc.)
   ctx.fillStyle = STYLE_CONFIG.label.color;
-  ctx.font = getFontString(STYLE_CONFIG.label);
-  ctx.fillText(label, x, y + 38);
+  const labelFontSize = STYLE_CONFIG.label.fontSize * scale;
+  ctx.font = `${STYLE_CONFIG.label.fontWeight} ${labelFontSize}px "${STYLE_CONFIG.label.fontFamily}", sans-serif`;
+  ctx.fillText(label, x, y + 38 * scale);
 
   // Subtext (date range) - single line
   if (subtext && subtext.length > 0) {
     ctx.fillStyle = STYLE_CONFIG.subtext.color;
-    ctx.font = getFontString(STYLE_CONFIG.subtext);
-    ctx.fillText(subtext, x, y + 54);
+    const subtextFontSize = STYLE_CONFIG.subtext.fontSize * scale;
+    ctx.font = `${STYLE_CONFIG.subtext.fontWeight} ${subtextFontSize}px "${STYLE_CONFIG.subtext.fontFamily}", sans-serif`;
+    ctx.fillText(subtext, x, y + 54 * scale);
   }
 }
 
@@ -581,18 +619,21 @@ function drawUsernameCredit(ctx, username, canvasWidth, canvasHeight) {
   // Save context state
   ctx.save();
 
-  // Discrete styling - small, subtle text
-  const fontSize = 11;
+  // Calculate scale factor based on canvas size
+  const scaleFactor = Math.min(canvasWidth / 1000, canvasHeight / 600);
+
+  // Discrete styling - small, subtle text with scaling
+  const fontSize = 11 * scaleFactor;
   const fontFamily = STYLE_CONFIG.subtext?.fontFamily || "Segoe UI";
   ctx.font = `${fontSize}px "${fontFamily}", sans-serif`;
-
+  
   // Very subtle color with low opacity
   const baseColor = STYLE_CONFIG.subtext?.color || "#768390";
   ctx.fillStyle = baseColor;
   ctx.globalAlpha = 0.5; // Make it more discrete
 
   // Position in bottom right with padding
-  const padding = 12;
+  const padding = 12 * scaleFactor;
   const text = `@${username}`;
   const textWidth = ctx.measureText(text).width;
   const x = canvasWidth - textWidth - padding;
