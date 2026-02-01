@@ -64,6 +64,15 @@ export const GITHUB_THEME = {
     shadowOffsetX: 0,
     shadowOffsetY: 3,
   },
+  graph: {
+    colors: {
+      level0: "#161b22",
+      level1: "#0e4429",
+      level2: "#006d32",
+      level3: "#26a641",
+      level4: "#39d353",
+    },
+  },
   dimensions: {
     contributionsBoxWidth: 316,
     contributionsBoxHeight: 84,
@@ -134,6 +143,15 @@ export const DARK_THEME = {
     shadowBlur: 12,
     shadowOffsetX: 0,
     shadowOffsetY: 4,
+  },
+  graph: {
+    colors: {
+      level0: "#0d1117",
+      level1: "#0e4429",
+      level2: "#006d32",
+      level3: "#26a641",
+      level4: "#39d353",
+    },
   },
   dimensions: {
     contributionsBoxWidth: 316,
@@ -206,6 +224,15 @@ export const LIGHT_THEME = {
     shadowOffsetX: 0,
     shadowOffsetY: 2,
   },
+  graph: {
+    colors: {
+      level0: "#ebedf0",
+      level1: "#9be9a8",
+      level2: "#40c463",
+      level3: "#30a14e",
+      level4: "#216e39",
+    },
+  },
   dimensions: {
     contributionsBoxWidth: 316,
     contributionsBoxHeight: 84,
@@ -276,6 +303,15 @@ export const NEON_THEME = {
     shadowBlur: 15,
     shadowOffsetX: 0,
     shadowOffsetY: 0,
+  },
+  graph: {
+    colors: {
+      level0: "#1a0033",
+      level1: "#4d0099",
+      level2: "#8000ff",
+      level3: "#b366ff",
+      level4: "#e600ff",
+    },
   },
   dimensions: {
     contributionsBoxWidth: 316,
@@ -348,6 +384,15 @@ export const MINIMAL_THEME = {
     shadowOffsetX: 0,
     shadowOffsetY: 2,
   },
+  graph: {
+    colors: {
+      level0: "#f5f5f5",
+      level1: "#d4d4d4",
+      level2: "#a3a3a3",
+      level3: "#737373",
+      level4: "#404040",
+    },
+  },
   dimensions: {
     contributionsBoxWidth: 316,
     contributionsBoxHeight: 84,
@@ -418,6 +463,15 @@ export const OCEAN_THEME = {
     shadowBlur: 10,
     shadowOffsetX: 0,
     shadowOffsetY: 3,
+  },
+  graph: {
+    colors: {
+      level0: "#0c4a6e",
+      level1: "#0e7490",
+      level2: "#06b6d4",
+      level3: "#22d3ee",
+      level4: "#67e8f9",
+    },
   },
   dimensions: {
     contributionsBoxWidth: 316,

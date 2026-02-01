@@ -132,6 +132,11 @@ export function renderIsometricChart(days, options = {}) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
+  // Enable antialiasing for smoother rendering
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.antialias = "subpixel";
+
   // Clear canvas with transparent background
   ctx.clearRect(0, 0, width, height);
 
@@ -173,13 +178,18 @@ export function renderIsometricChart(days, options = {}) {
         cubeHeight += Number.parseInt((maxHeight / maxCount) * day.count, 10);
       }
 
+      // Get color from theme based on contribution level
+      const level = day.level || 0;
+      const themeColor = STYLE_CONFIG.graph?.colors?.[`level${level}`] || day.color;
+      const colorHex = themeColor.replace('#', '');
+
       const dimension = new obelisk.CubeDimension(
         cubeSize,
         cubeSize,
         cubeHeight,
       );
       const color = new obelisk.CubeColor().getByHorizontalColor(
-        Number.parseInt(day.color, 16),
+        Number.parseInt(colorHex, 16),
       );
       const cube = new obelisk.Cube(dimension, color, false);
       const p3d = new obelisk.Point3D(cubeSize * x, cubeSize * y, 0);
