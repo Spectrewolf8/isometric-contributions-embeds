@@ -39,6 +39,36 @@
 
     <title>Isometric Contributions API</title>
     <style>
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f6f8fa;
+        --bg-tertiary: #ffffff;
+        --text-primary: #24292f;
+        --text-secondary: #586069;
+        --border-color: #d0d7de;
+        --code-bg: #f6f8fa;
+        --link-color: #0969da;
+        --heading-primary: #0969da;
+        --heading-secondary: #1a7f37;
+        --button-bg: #0969da;
+        --button-hover: #0860ca;
+      }
+
+      [data-theme="dark"] {
+        --bg-primary: #000000;
+        --bg-secondary: #0a0a0a;
+        --bg-tertiary: #1a1a1a;
+        --text-primary: #e6e6e6;
+        --text-secondary: #a0a0a0;
+        --border-color: #2a2a2a;
+        --code-bg: #0a0a0a;
+        --link-color: #58a6ff;
+        --heading-primary: #58a6ff;
+        --heading-secondary: #3fb950;
+        --button-bg: #238636;
+        --button-hover: #2ea043;
+      }
+
       body {
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
@@ -47,28 +77,34 @@
         margin: 40px auto;
         padding: 0 20px;
         line-height: 1.6;
-        color: #24292f;
+        color: var(--text-primary);
+        background-color: var(--bg-primary);
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
       }
       h1 {
-        color: #0969da;
+        color: var(--heading-primary);
       }
       h2 {
-        color: #1a7f37;
+        color: var(--heading-secondary);
         margin-top: 32px;
       }
       code {
-        background: #f6f8fa;
+        background: var(--code-bg);
         padding: 2px 6px;
         border-radius: 3px;
         font-family:
           "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         font-size: 12px;
+        color: var(--text-primary);
       }
       pre {
-        background: #f6f8fa;
+        background: var(--code-bg);
         padding: 16px;
         border-radius: 6px;
         overflow-x: auto;
+        color: var(--text-primary);
       }
       table {
         border-collapse: collapse;
@@ -77,12 +113,12 @@
       }
       th,
       td {
-        border: 1px solid #d0d7de;
+        border: 1px solid var(--border-color);
         padding: 8px 12px;
         text-align: left;
       }
       th {
-        background: #f6f8fa;
+        background: var(--bg-secondary);
         font-weight: 600;
       }
       .example {
@@ -91,15 +127,76 @@
       .badge {
         display: inline-block;
         padding: 2px 8px;
-        background: #0969da;
+        background: var(--button-bg);
         color: white;
         border-radius: 12px;
         font-size: 12px;
         font-weight: 600;
       }
+      .theme-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        z-index: 1000;
+        padding: 0;
+      }
+      .theme-switch {
+        width: 60px;
+        height: 30px;
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border-color);
+        border-radius: 20px;
+        position: relative;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        padding: 2px;
+      }
+      .theme-switch:hover {
+        border-color: var(--heading-primary);
+      }
+      .theme-slider {
+        width: 22px;
+        height: 22px;
+        background: var(--bg-primary);
+        border-radius: 50%;
+        position: absolute;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        left: 3px;
+      }
+      [data-theme="dark"] .theme-slider {
+        left: 31px;
+        background: var(--heading-primary);
+      }
+      [data-theme="dark"] .theme-switch {
+        background: var(--bg-secondary);
+      }
+      a {
+        color: var(--link-color);
+      }
     </style>
   </head>
   <body>
+    <button
+      class="theme-toggle"
+      onclick="toggleTheme()"
+      aria-label="Toggle theme"
+    >
+      <div class="theme-switch">
+        <div class="theme-slider">
+          <span id="themeIcon">🌙</span>
+        </div>
+      </div>
+    </button>
+
     <div style="text-align: center; margin-bottom: 40px">
       <h1 style="font-size: 2.5em; margin-bottom: 10px">
         <img
@@ -114,7 +211,9 @@
         />
         Isometric Contributions API
       </h1>
-      <p style="font-size: 1.2em; color: #586069; margin-bottom: 0">
+      <p
+        style="font-size: 1.2em; color: var(--text-secondary); margin-bottom: 0"
+      >
         Generate beautiful isometric contribution graphs with themes, caching
         and customization
       </p>
@@ -200,7 +299,7 @@
         id="builderToggle"
         style="
           font-size: 0.7em;
-          color: #0969da;
+          color: var(--heading-primary);
           font-weight: 500;
           margin-left: 8px;
         "
@@ -213,7 +312,7 @@
 
       <div
         style="
-          background: #f6f8fa;
+          background: var(--bg-secondary);
           padding: 16px;
           border-radius: 8px;
           margin: 16px 0;
@@ -235,7 +334,7 @@
                 margin-bottom: 4px;
                 font-weight: 600;
                 font-size: 13px;
-                color: #24292f;
+                color: var(--text-primary);
               "
             >
               Username <span style="color: #cf222e">*</span>
@@ -247,11 +346,13 @@
               style="
                 width: 100%;
                 padding: 6px 10px;
-                border: 1px solid #d0d7de;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-family: inherit;
                 font-size: 13px;
                 box-sizing: border-box;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
               "
             />
           </div>
@@ -264,7 +365,7 @@
                 margin-bottom: 4px;
                 font-weight: 600;
                 font-size: 13px;
-                color: #24292f;
+                color: var(--text-primary);
               "
             >
               Theme
@@ -274,12 +375,13 @@
               style="
                 width: 100%;
                 padding: 6px 10px;
-                border: 1px solid #d0d7de;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-family: inherit;
                 font-size: 13px;
                 box-sizing: border-box;
-                background: white;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
               "
             >
               <option value="github">GitHub</option>
@@ -299,7 +401,7 @@
                 margin-bottom: 4px;
                 font-weight: 600;
                 font-size: 13px;
-                color: #24292f;
+                color: var(--text-primary);
               "
             >
               Year
@@ -313,11 +415,13 @@
               style="
                 width: 100%;
                 padding: 6px 10px;
-                border: 1px solid #d0d7de;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-family: inherit;
                 font-size: 13px;
                 box-sizing: border-box;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
               "
             />
           </div>
@@ -330,7 +434,7 @@
                 margin-bottom: 4px;
                 font-weight: 600;
                 font-size: 13px;
-                color: #24292f;
+                color: var(--text-primary);
               "
             >
               Width (px)
@@ -344,11 +448,13 @@
               style="
                 width: 100%;
                 padding: 6px 10px;
-                border: 1px solid #d0d7de;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-family: inherit;
                 font-size: 13px;
                 box-sizing: border-box;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
               "
             />
           </div>
@@ -361,7 +467,7 @@
                 margin-bottom: 4px;
                 font-weight: 600;
                 font-size: 13px;
-                color: #24292f;
+                color: var(--text-primary);
               "
             >
               Height (px)
@@ -375,11 +481,13 @@
               style="
                 width: 100%;
                 padding: 6px 10px;
-                border: 1px solid #d0d7de;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-family: inherit;
                 font-size: 13px;
                 box-sizing: border-box;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
               "
             />
           </div>
@@ -405,7 +513,12 @@
                 id="builderStats"
                 style="cursor: pointer"
               />
-              <span style="font-weight: 600; font-size: 13px; color: #24292f"
+              <span
+                style="
+                  font-weight: 600;
+                  font-size: 13px;
+                  color: var(--text-primary);
+                "
                 >Stats</span
               >
             </label>
@@ -423,7 +536,12 @@
                 id="builderCredit"
                 style="cursor: pointer"
               />
-              <span style="font-weight: 600; font-size: 13px; color: #24292f"
+              <span
+                style="
+                  font-weight: 600;
+                  font-size: 13px;
+                  color: var(--text-primary);
+                "
                 >Credit</span
               >
             </label>
@@ -436,7 +554,7 @@
               style="
                 font-size: 13px;
                 font-weight: 600;
-                color: #24292f;
+                color: var(--text-primary);
                 margin-right: 12px;
               "
               >Format:</label
@@ -447,7 +565,6 @@
                 name="urlFormat"
                 value="url"
                 checked
-                onchange="buildUrl()"
                 style="margin-right: 4px; cursor: pointer"
               />
               URL
@@ -457,7 +574,6 @@
                 type="radio"
                 name="urlFormat"
                 value="markdown"
-                onchange="buildUrl()"
                 style="margin-right: 4px; cursor: pointer"
               />
               Markdown
@@ -467,13 +583,33 @@
                 type="radio"
                 name="urlFormat"
                 value="html"
-                onchange="buildUrl()"
                 style="margin-right: 4px; cursor: pointer"
               />
               HTML
             </label>
           </div>
-          <div style="display: flex; gap: 8px">
+          <div style="margin-top: 12px">
+            <button
+              onclick="buildUrl()"
+              style="
+                width: 100%;
+                padding: 10px 16px;
+                background: var(--button-bg);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 14px;
+                transition: background 0.2s ease;
+              "
+              onmouseover="this.style.background = 'var(--button-hover)'"
+              onmouseout="this.style.background = 'var(--button-bg)'"
+            >
+              Generate URL & Preview
+            </button>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px">
             <input
               type="text"
               id="generatedUrl"
@@ -482,11 +618,12 @@
               style="
                 flex: 1;
                 padding: 8px 12px;
-                border: 1px solid #d0d7de;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
                 font-size: 12px;
-                background: white;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
               "
             />
             <button
@@ -494,7 +631,7 @@
               id="copyButton"
               style="
                 padding: 8px 16px;
-                background: #0969da;
+                background: var(--button-bg);
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -513,8 +650,8 @@
           <div
             id="previewContainer"
             style="
-              background: white;
-              border: 2px solid #d0d7de;
+              background: var(--bg-tertiary);
+              border: 2px solid var(--border-color);
               border-radius: 6px;
               padding: 12px;
               text-align: center;
@@ -524,7 +661,7 @@
               justify-content: center;
             "
           >
-            <div style="color: #586069; font-size: 13px">
+            <div style="color: var(--text-secondary); font-size: 13px">
               Enter a username to see preview
             </div>
           </div>
@@ -707,7 +844,7 @@
         display: flex;
         gap: 8px;
         margin: 16px 0;
-        border-bottom: 1px solid #d0d7de;
+        border-bottom: 1px solid var(--border-color);
       "
     >
       <button
@@ -718,9 +855,9 @@
           border: none;
           background: none;
           cursor: pointer;
-          border-bottom: 3px solid #0969da;
+          border-bottom: 3px solid var(--heading-primary);
           font-weight: 600;
-          color: #0969da;
+          color: var(--heading-primary);
         "
       >
         Last 30 Days
@@ -734,7 +871,7 @@
           background: none;
           cursor: pointer;
           border-bottom: 3px solid transparent;
-          color: #586069;
+          color: var(--text-secondary);
         "
       >
         Lifetime
@@ -759,39 +896,51 @@
       >
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
           "
         >
           <div
-            style="font-size: 2em; font-weight: bold; color: #0969da"
+            style="
+              font-size: 2em;
+              font-weight: bold;
+              color: var(--heading-primary);
+            "
             id="totalRequests"
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Total Requests</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Total Requests
+          </div>
         </div>
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
           "
         >
           <div
-            style="font-size: 2em; font-weight: bold; color: #1a7f37"
+            style="
+              font-size: 2em;
+              font-weight: bold;
+              color: var(--heading-secondary);
+            "
             id="uniqueUsers"
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Avg Daily Users</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Avg Daily Users
+          </div>
         </div>
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
@@ -803,7 +952,9 @@
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Cache Hit Rate</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Cache Hit Rate
+          </div>
         </div>
       </div>
     </div>
@@ -825,39 +976,51 @@
       >
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
           "
         >
           <div
-            style="font-size: 2em; font-weight: bold; color: #0969da"
+            style="
+              font-size: 2em;
+              font-weight: bold;
+              color: var(--heading-primary);
+            "
             id="lifetimeTotalRequests"
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Total Requests</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Total Requests
+          </div>
         </div>
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
           "
         >
           <div
-            style="font-size: 2em; font-weight: bold; color: #1a7f37"
+            style="
+              font-size: 2em;
+              font-weight: bold;
+              color: var(--heading-secondary);
+            "
             id="lifetimeUniqueUsers"
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Unique Users</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Unique Users
+          </div>
         </div>
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
@@ -869,11 +1032,13 @@
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Cache Hit Rate</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Cache Hit Rate
+          </div>
         </div>
         <div
           style="
-            background: #f6f8fa;
+            background: var(--bg-secondary);
             padding: 16px;
             border-radius: 6px;
             text-align: center;
@@ -885,20 +1050,24 @@
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Total Cache Hits</div>
+          <div style="color: var(--text-secondary); margin-top: 4px">
+            Total Cache Hits
+          </div>
         </div>
       </div>
       <div
         style="
-          background: #f6f8fa;
+          background: var(--bg-secondary);
           padding: 16px;
           border-radius: 6px;
           margin: 16px 0;
         "
       >
-        <div style="color: #586069; margin-bottom: 8px">First Request</div>
+        <div style="color: var(--text-secondary); margin-bottom: 8px">
+          First Request
+        </div>
         <div
-          style="font-size: 1.2em; font-weight: 600; color: #24292f"
+          style="font-size: 1.2em; font-weight: 600; color: var(--text-primary)"
           id="lifetimeFirstRequest"
         >
           -
@@ -927,6 +1096,34 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
+      // Theme Management
+      function initTheme() {
+        const savedTheme = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        updateThemeButton(savedTheme);
+      }
+
+      function toggleTheme() {
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme") || "light";
+        const newTheme = currentTheme === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateThemeButton(newTheme);
+      }
+
+      function updateThemeButton(theme) {
+        const icon = document.getElementById("themeIcon");
+        if (theme === "dark") {
+          icon.textContent = "☀️";
+        } else {
+          icon.textContent = "🌙";
+        }
+      }
+
+      // Initialize theme on load
+      initTheme();
+
       let currentPeriod = "30days";
 
       // Chart configuration for modern minimal look
@@ -1036,16 +1233,8 @@
           "url";
 
         if (!username) {
-          const placeholderUrl = `${baseUrl}/api/graph?username=<enter-username>`;
-          let placeholderText = placeholderUrl;
-          if (format === "markdown") {
-            placeholderText = `![GitHub Contributions](${placeholderUrl})`;
-          } else if (format === "html") {
-            placeholderText = `<img src="${placeholderUrl}" alt="GitHub Contributions" />`;
-          }
-          document.getElementById("generatedUrl").value = placeholderText;
-          document.getElementById("previewContainer").innerHTML =
-            '<div style="color: #586069">Enter a username to see preview</div>';
+          alert("Please enter a GitHub username");
+          document.getElementById("builderUsername").focus();
           return;
         }
 
@@ -1098,12 +1287,13 @@
           navigator.clipboard.writeText(urlInput.value);
           const button = document.getElementById("copyButton");
           const originalText = button.textContent;
+          const originalBg = getComputedStyle(button).backgroundColor;
           button.textContent = "Copied!";
           button.style.background = "#1a7f37";
 
           setTimeout(() => {
             button.textContent = originalText;
-            button.style.background = "#0969da";
+            button.style.background = "";
           }, 2000);
         } catch (err) {
           // Fallback for older browsers
@@ -1114,21 +1304,22 @@
 
       // Add event listeners to all URL builder inputs
       document.addEventListener("DOMContentLoaded", function () {
+        // Add Enter key support to trigger URL generation
         const builderInputs = [
           "builderUsername",
           "builderYear",
           "builderWidth",
           "builderHeight",
-          "builderTheme",
-          "builderStats",
-          "builderCredit",
         ];
 
         builderInputs.forEach((id) => {
           const element = document.getElementById(id);
           if (element) {
-            element.addEventListener("input", buildUrl);
-            element.addEventListener("change", buildUrl);
+            element.addEventListener("keypress", function (e) {
+              if (e.key === "Enter") {
+                buildUrl();
+              }
+            });
           }
         });
       });
@@ -1137,18 +1328,25 @@
       function switchPeriod(period) {
         currentPeriod = period;
 
+        const primaryColor = getComputedStyle(document.documentElement)
+          .getPropertyValue("--heading-primary")
+          .trim();
+        const secondaryColor = getComputedStyle(document.documentElement)
+          .getPropertyValue("--text-secondary")
+          .trim();
+
         // Update tabs
         document.getElementById("tab30days").style.borderBottomColor =
-          period === "30days" ? "#0969da" : "transparent";
+          period === "30days" ? primaryColor : "transparent";
         document.getElementById("tab30days").style.color =
-          period === "30days" ? "#0969da" : "#586069";
+          period === "30days" ? primaryColor : secondaryColor;
         document.getElementById("tab30days").style.fontWeight =
           period === "30days" ? "600" : "normal";
 
         document.getElementById("tabLifetime").style.borderBottomColor =
-          period === "lifetime" ? "#0969da" : "transparent";
+          period === "lifetime" ? primaryColor : "transparent";
         document.getElementById("tabLifetime").style.color =
-          period === "lifetime" ? "#0969da" : "#586069";
+          period === "lifetime" ? primaryColor : secondaryColor;
         document.getElementById("tabLifetime").style.fontWeight =
           period === "lifetime" ? "600" : "normal";
 

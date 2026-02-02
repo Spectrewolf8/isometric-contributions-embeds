@@ -60,11 +60,15 @@ export function parseContributionsData(apiData) {
   // The nested format has year -> month -> day -> {date, count, level}
   // We need to collect all days and sort them by date
   for (const [year, months] of Object.entries(apiData.contributions)) {
-    for (const [month, monthData] of Object.entries(months)) {
+    // months is an object like { "1": {...days...}, "2": {...days...} }
+    if (!months || typeof months !== "object") continue;
+
+    for (const [monthKey, monthData] of Object.entries(months)) {
+      // monthData is an object like { "1": {date, count, level}, "2": {...} }
       if (!monthData || typeof monthData !== "object") continue;
 
       for (const [dayKey, day] of Object.entries(monthData)) {
-        if (day && day.date) {
+        if (day && day.date && typeof day === "object") {
           days.push({
             date: new Date(day.date),
             count: day.count || 0,

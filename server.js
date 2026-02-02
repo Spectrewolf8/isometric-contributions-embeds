@@ -185,11 +185,18 @@ async function generateGraph(params) {
   }
 
   // Fetch contribution data
+  console.log(
+    `[FETCH] Fetching contributions for ${username} (year: ${year})...`,
+  );
   const data = await fetchContributions(username, year);
+
+  console.log(`[PARSE] Parsing contribution data...`);
   const days = parseContributionsData(data);
 
+  console.log(`[RESULT] Parsed ${days.length} days of contribution data`);
+
   if (days.length === 0) {
-    throw new Error("No contribution data found");
+    throw new Error(`No contribution data found for ${username} in ${year}`);
   }
 
   // Render options
