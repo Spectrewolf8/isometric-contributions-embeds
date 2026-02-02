@@ -407,7 +407,7 @@ server.listen(PORT, () => {
 
   `);
   console.log("Press Ctrl+C to stop the server\n");
-  console.log("💡 Cache cleanup runs automatically via Supabase pg_cron\n");
+  console.log("💡 Cache cleanup runs automatically via cron job\n");
 });
 
 // Graceful shutdown
