@@ -334,12 +334,14 @@ The Docker setup works on any platform supporting containers (Railway, Fly.io, C
 
 ## Scripts
 
-| Command            | Description                   |
-| ------------------ | ----------------------------- |
-| `npm run generate` | Generate graph via CLI        |
-| `npm run server`   | Start API server              |
-| `npm run dev`      | Start server with auto-reload |
-| `npm run test:api` | Test API endpoints            |
+| Command                     | Description                       |
+| --------------------------- | --------------------------------- |
+| `npm run generate`          | Generate graph via CLI            |
+| `npm run server`            | Start API server                  |
+| `npm run dev`               | Start server with auto-reload     |
+| `npm run test:api`          | Test API endpoints                |
+| `npm run cleanup`           | Manually run cache cleanup        |
+| `npm run cleanup:scheduler` | Start automatic cleanup scheduler |
 
 ## Output
 
@@ -359,18 +361,145 @@ Generates PNG images with:
 
 ## Cache Management
 
-**Supabase Storage Cache:**
+The project includes automatic cache cleanup to remove old files from Supabase Storage.
 
-- Production buckets are pruned automatically by pg_cron using the cleanup job in [supabase-cache-cleanup.sql](supabase/functions/clean-cache/supabase-cache-cleanup.sql).
-- By default, files older than 7 days are removed once a day (update the retention or schedule inside the script).
-- Trigger an immediate cleanup from the Supabase SQL editor: `SELECT * FROM cleanup_old_cache(1);`
+### Setup
+
+1. **Add environment variables to `.env`:**
+
+   ```env
+   SUPABASE_ANON_KEY=your-anon-key
+   CACHE_RETENTION_DAYS=1
+   CLEANUP_SCHEDULE=0 3 * * *  # Daily at 3 AM
+   RUN_ON_STARTUP=true
+   TZ=UTC
+   ```
+
+2. **Add DELETE policy to Supabase (one-time setup):**
+
+   Run this in your Supabase SQL Editor:
+
+   ```sql
+   CREATE POLICY "Anon delete access"
+     ON storage.objects
+     FOR DELETE
+     TO anon
+     USING (bucket_id = 'isometric-cache');
+
+   GRANT DELETE ON storage.objects TO anon;
+   ```
+
+3. **Start the scheduler:**
+   ```bash
+   npm run cleanup:scheduler
+   ```
+
+The scheduler runs automatically in Docker/production (see [Dockerfile](Dockerfile)).
+
+### Manual Cleanup
+
+Run cleanup on-demand:
+
+```bash
+npm run cleanup
+```
+
+### Cron Schedule Examples
+
+- `0 3 * * *` - Daily at 3 AM
+- `0 */6 * * *` - Every 6 hours
+- `0 */12 * * *` - Every 12 hours
+- `*/30 * * * *` - Every 30 minutes
+- `0 0 * * 0` - Weekly on Sunday at midnight
+
+### How It Works
+
+The cleanup script:
+
+1. Lists all files in the Supabase Storage bucket
+2. Checks each file against retention criteria:
+   - Files with `created_at` older than retention period
+   - Files in date folders (e.g., `username/2026-02-01/`) older than retention
+   - `.emptyFolderPlaceholder` files
+3. Deletes matching files using Supabase Storage API
+4. Logs results with counts and examples
+
+### Production Deployment
+
+**With PM2 (process manager):**
+
+```bash
+# Start server
+pm2 start server.js --name api
+
+# Start cleanup scheduler
+pm2 start cleanup-scheduler.js --name cache-cleanup
+
+# Save configuration
+pm2 save
+
+# Setup startup script
+pm2 startup
+```
+
+**Docker/Render/Railway:**
+
+The Dockerfile automatically starts both processes:
+
+```dockerfile
+CMD ["sh", "-c", "node server.js & node cleanup-scheduler.js & wait"]
+```
+
+Just add the environment variables to your hosting platform.
 
 ## Troubleshooting
 
-**Force Supabase Cleanup:**
+### Cache Cleanup Issues
 
-1. Run the job once: `SELECT * FROM cleanup_old_cache();`
-2. Verify the cron entry exists: `SELECT jobname, schedule FROM cron.job WHERE jobname = 'cleanup-old-cache';`
+**No files deleted:**
+
+- Check `CACHE_RETENTION_DAYS` - files must be older than this
+- Verify DELETE policy is set up in Supabase (see setup step 2)
+- Check file dates in Supabase dashboard
+
+**Permission errors:**
+
+- Ensure DELETE policy exists for anon role on storage.objects
+- Run the setup SQL in Supabase SQL Editor (see Cache Management section)
+- Verify bucket name matches `SUPABASE_BUCKET_NAME`
+
+**Scheduler not running:**
+
+- Verify cron expression is valid
+- Check timezone setting (`TZ` environment variable)
+- Ensure process stays running (use PM2 or Docker)
+- Check logs: `pm2 logs cache-cleanup` (if using PM2)
+
+**Manual testing:**
+
+```bash
+# Test cleanup manually
+npm run cleanup
+
+# With different retention
+CACHE_RETENTION_DAYS=7 npm run cleanup
+```
+
+**Check cleanup logs:**
+
+The cleanup script outputs detailed logs:
+
+```
+🧹 Starting cache cleanup...
+📅 Retention: 1 day(s)
+📦 Bucket: isometric-cache
+🔪 Cutoff date: 2026-02-01
+📊 Total files: 27
+🎯 Files to delete: 5
+✅ Successfully deleted 5 file(s)
+   🗑️  spectrewolf8/2026-02-01/abc123.png
+   ...
+```
 
 ## Acknowledgements
 

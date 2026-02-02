@@ -18,4 +18,6 @@ COPY . .
 EXPOSE 3000
 
 ENV NODE_ENV=production
-CMD ["node", "server.js"]
+
+# Start both server and cleanup scheduler
+CMD ["sh", "-c", "node server.js & node cleanup-scheduler.js & wait"]

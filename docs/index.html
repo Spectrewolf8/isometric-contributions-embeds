@@ -448,7 +448,7 @@
           >
             -
           </div>
-          <div style="color: #586069; margin-top: 4px">Unique Users</div>
+          <div style="color: #586069; margin-top: 4px">Avg Daily Users</div>
         </div>
         <div
           style="
@@ -647,11 +647,20 @@
                 ? ((totalCacheHits / totalRequests) * 100).toFixed(1)
                 : 0;
 
+            const avgDailyUsers =
+              stats.length > 0
+                ? Math.round(
+                    stats.reduce(
+                      (sum, day) => sum + parseInt(day.unique_users || 0),
+                      0,
+                    ) / stats.length,
+                  )
+                : 0;
+
             document.getElementById("totalRequests").textContent =
               totalRequests.toLocaleString();
-            document.getElementById("uniqueUsers").textContent = stats
-              .reduce((sum, day) => sum + parseInt(day.unique_users || 0), 0)
-              .toLocaleString();
+            document.getElementById("uniqueUsers").textContent =
+              avgDailyUsers.toLocaleString();
             document.getElementById("cacheHitRate").textContent =
               cacheHitRate + "%";
 
