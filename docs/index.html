@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -40,8 +40,9 @@
     <title>Isometric Contributions API</title>
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
         max-width: 900px;
         margin: 40px auto;
         padding: 0 20px;
@@ -59,8 +60,8 @@
         background: #f6f8fa;
         padding: 2px 6px;
         border-radius: 3px;
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
-          monospace;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         font-size: 12px;
       }
       pre {
@@ -193,38 +194,342 @@
       </tbody>
     </table>
 
-    <h2>Examples</h2>
-
-    <div class="example">
-      <h3>Basic usage:</h3>
-      <pre>/api/graph?username=spectrewolf8</pre>
-    </div>
-
-    <div class="example">
-      <h3>With specific year:</h3>
-      <pre>/api/graph?username=spectrewolf8&amp;year=2025</pre>
-    </div>
-
-    <div class="example">
-      <h3>With stats:</h3>
-      <pre>/api/graph?username=spectrewolf8&amp;stats=true</pre>
-    </div>
-
-    <div class="example">
-      <h3>Custom dimensions:</h3>
-      <pre>/api/graph?username=spectrewolf8&amp;width=1920&amp;height=1080</pre>
-    </div>
-
-    <div class="example">
-      <h3>With theme:</h3>
-      <pre>/api/graph?username=spectrewolf8&amp;theme=dark&amp;stats=true</pre>
-    </div>
-
-    <div class="example">
-      <h3>Full customization:</h3>
-      <pre>
-/api/graph?username=spectrewolf8&amp;year=2025&amp;width=1200&amp;height=700&amp;stats=true&amp;credit=true&amp;theme=neon</pre
+    <h2 style="cursor: pointer; user-select: none" onclick="toggleBuilder()">
+      URL Builder
+      <span
+        id="builderToggle"
+        style="
+          font-size: 0.7em;
+          color: #0969da;
+          font-weight: 500;
+          margin-left: 8px;
+        "
+        >[Hide] Click to collapse</span
       >
+    </h2>
+
+    <div id="urlBuilderContent" style="display: block">
+      <p>Build your custom graph URL with live preview:</p>
+
+      <div
+        style="
+          background: #f6f8fa;
+          padding: 16px;
+          border-radius: 8px;
+          margin: 16px 0;
+        "
+      >
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+          "
+        >
+          <div>
+            <label
+              for="builderUsername"
+              style="
+                display: block;
+                margin-bottom: 4px;
+                font-weight: 600;
+                font-size: 13px;
+                color: #24292f;
+              "
+            >
+              Username <span style="color: #cf222e">*</span>
+            </label>
+            <input
+              type="text"
+              id="builderUsername"
+              placeholder="e.g., spectrewolf8"
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                font-family: inherit;
+                font-size: 13px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+
+          <div>
+            <label
+              for="builderTheme"
+              style="
+                display: block;
+                margin-bottom: 4px;
+                font-weight: 600;
+                font-size: 13px;
+                color: #24292f;
+              "
+            >
+              Theme
+            </label>
+            <select
+              id="builderTheme"
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                font-family: inherit;
+                font-size: 13px;
+                box-sizing: border-box;
+                background: white;
+              "
+            >
+              <option value="github">GitHub</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="neon">Neon</option>
+              <option value="minimal">Minimal</option>
+              <option value="ocean">Ocean</option>
+            </select>
+          </div>
+
+          <div>
+            <label
+              for="builderYear"
+              style="
+                display: block;
+                margin-bottom: 4px;
+                font-weight: 600;
+                font-size: 13px;
+                color: #24292f;
+              "
+            >
+              Year
+            </label>
+            <input
+              type="number"
+              id="builderYear"
+              placeholder="2025"
+              min="2008"
+              max="2030"
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                font-family: inherit;
+                font-size: 13px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+
+          <div>
+            <label
+              for="builderWidth"
+              style="
+                display: block;
+                margin-bottom: 4px;
+                font-weight: 600;
+                font-size: 13px;
+                color: #24292f;
+              "
+            >
+              Width (px)
+            </label>
+            <input
+              type="number"
+              id="builderWidth"
+              placeholder="1000"
+              min="400"
+              max="3000"
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                font-family: inherit;
+                font-size: 13px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+
+          <div>
+            <label
+              for="builderHeight"
+              style="
+                display: block;
+                margin-bottom: 4px;
+                font-weight: 600;
+                font-size: 13px;
+                color: #24292f;
+              "
+            >
+              Height (px)
+            </label>
+            <input
+              type="number"
+              id="builderHeight"
+              placeholder="600"
+              min="300"
+              max="2000"
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                font-family: inherit;
+                font-size: 13px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              align-items: flex-end;
+              padding-bottom: 6px;
+            "
+          >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="builderStats"
+                style="cursor: pointer"
+              />
+              <span style="font-weight: 600; font-size: 13px; color: #24292f"
+                >Stats</span
+              >
+            </label>
+
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="builderCredit"
+                style="cursor: pointer"
+              />
+              <span style="font-weight: 600; font-size: 13px; color: #24292f"
+                >Credit</span
+              >
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px">
+          <div style="margin-bottom: 8px">
+            <label
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: #24292f;
+                margin-right: 12px;
+              "
+              >Format:</label
+            >
+            <label style="margin-right: 16px; cursor: pointer; font-size: 13px">
+              <input
+                type="radio"
+                name="urlFormat"
+                value="url"
+                checked
+                onchange="buildUrl()"
+                style="margin-right: 4px; cursor: pointer"
+              />
+              URL
+            </label>
+            <label style="margin-right: 16px; cursor: pointer; font-size: 13px">
+              <input
+                type="radio"
+                name="urlFormat"
+                value="markdown"
+                onchange="buildUrl()"
+                style="margin-right: 4px; cursor: pointer"
+              />
+              Markdown
+            </label>
+            <label style="cursor: pointer; font-size: 13px">
+              <input
+                type="radio"
+                name="urlFormat"
+                value="html"
+                onchange="buildUrl()"
+                style="margin-right: 4px; cursor: pointer"
+              />
+              HTML
+            </label>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <input
+              type="text"
+              id="generatedUrl"
+              readonly
+              value="https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=<enter-username>"
+              style="
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                font-family: &quot;SFMono-Regular&quot;, Consolas, monospace;
+                font-size: 12px;
+                background: white;
+              "
+            />
+            <button
+              onclick="copyUrl()"
+              id="copyButton"
+              style="
+                padding: 8px 16px;
+                background: #0969da;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 13px;
+                white-space: nowrap;
+              "
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px">
+          <div
+            id="previewContainer"
+            style="
+              background: white;
+              border: 2px solid #d0d7de;
+              border-radius: 6px;
+              padding: 12px;
+              text-align: center;
+              min-height: 150px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <div style="color: #586069; font-size: 13px">
+              Enter a username to see preview
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <h2>Theme Gallery</h2>
@@ -310,6 +615,40 @@
         </tr>
       </tbody>
     </table>
+
+    <h2>Examples</h2>
+
+    <div class="example">
+      <h3>Basic usage:</h3>
+      <pre>/api/graph?username=spectrewolf8</pre>
+    </div>
+
+    <div class="example">
+      <h3>With specific year:</h3>
+      <pre>/api/graph?username=spectrewolf8&amp;year=2025</pre>
+    </div>
+
+    <div class="example">
+      <h3>With stats:</h3>
+      <pre>/api/graph?username=spectrewolf8&amp;stats=true</pre>
+    </div>
+
+    <div class="example">
+      <h3>Custom dimensions:</h3>
+      <pre>/api/graph?username=spectrewolf8&amp;width=1920&amp;height=1080</pre>
+    </div>
+
+    <div class="example">
+      <h3>With theme:</h3>
+      <pre>/api/graph?username=spectrewolf8&amp;theme=dark&amp;stats=true</pre>
+    </div>
+
+    <div class="example">
+      <h3>Full customization:</h3>
+      <pre>
+/api/graph?username=spectrewolf8&amp;year=2025&amp;width=1200&amp;height=700&amp;stats=true&amp;credit=true&amp;theme=neon</pre
+      >
+    </div>
 
     <h2>Caching</h2>
     <p>
@@ -407,7 +746,7 @@
       <p>Live usage statistics for the last 30 days:</p>
       <canvas
         id="analyticsChart"
-        style="max-height: 400px; margin: 20px 0"
+        style="max-height: 300px; margin: 20px 0"
       ></canvas>
       <div
         id="analyticsStats"
@@ -472,6 +811,10 @@
     <!-- Lifetime View -->
     <div id="viewLifetime" style="display: none">
       <p>All-time usage statistics since launch:</p>
+      <canvas
+        id="lifetimeChart"
+        style="max-height: 300px; margin: 20px 0"
+      ></canvas>
       <div
         style="
           display: grid;
@@ -586,6 +929,210 @@
     <script>
       let currentPeriod = "30days";
 
+      // Chart configuration for modern minimal look
+      const chartConfig = {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: {
+          intersect: false,
+          mode: "index",
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: {
+              padding: 20,
+              font: {
+                size: 13,
+                family:
+                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                weight: "600",
+              },
+              usePointStyle: true,
+              pointStyle: "circle",
+            },
+          },
+          tooltip: {
+            backgroundColor: "rgba(36, 41, 47, 0.95)",
+            padding: 12,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: "600",
+            },
+            bodyFont: {
+              size: 13,
+            },
+            borderColor: "rgba(208, 215, 222, 0.3)",
+            borderWidth: 1,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: "rgba(208, 215, 222, 0.3)",
+              drawBorder: false,
+            },
+            ticks: {
+              precision: 0,
+              font: {
+                size: 12,
+              },
+              color: "#586069",
+            },
+          },
+          x: {
+            grid: {
+              display: false,
+              drawBorder: false,
+            },
+            ticks: {
+              font: {
+                size: 12,
+              },
+              color: "#586069",
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 15,
+            },
+          },
+        },
+        animation: {
+          duration: 1000,
+          easing: "easeInOutQuart",
+        },
+      };
+
+      // Toggle URL Builder visibility
+      function toggleBuilder() {
+        const content = document.getElementById("urlBuilderContent");
+        const toggle = document.getElementById("builderToggle");
+        if (content.style.display === "none") {
+          content.style.display = "block";
+          toggle.textContent = "[Hide] Click to collapse";
+        } else {
+          content.style.display = "none";
+          toggle.textContent = "[Show] Click to expand";
+        }
+      }
+
+      // URL Builder functionality
+      function buildUrl() {
+        const username = document
+          .getElementById("builderUsername")
+          .value.trim();
+        const year = document.getElementById("builderYear").value.trim();
+        const width = document.getElementById("builderWidth").value.trim();
+        const height = document.getElementById("builderHeight").value.trim();
+        const theme = document.getElementById("builderTheme").value;
+        const stats = document.getElementById("builderStats").checked;
+        const credit = document.getElementById("builderCredit").checked;
+
+        const baseUrl = window.location.origin;
+        const format =
+          document.querySelector('input[name="urlFormat"]:checked')?.value ||
+          "url";
+
+        if (!username) {
+          const placeholderUrl = `${baseUrl}/api/graph?username=<enter-username>`;
+          let placeholderText = placeholderUrl;
+          if (format === "markdown") {
+            placeholderText = `![GitHub Contributions](${placeholderUrl})`;
+          } else if (format === "html") {
+            placeholderText = `<img src="${placeholderUrl}" alt="GitHub Contributions" />`;
+          }
+          document.getElementById("generatedUrl").value = placeholderText;
+          document.getElementById("previewContainer").innerHTML =
+            '<div style="color: #586069">Enter a username to see preview</div>';
+          return;
+        }
+
+        const params = new URLSearchParams();
+        params.append("username", username);
+
+        if (year) params.append("year", year);
+        if (width) params.append("width", width);
+        if (height) params.append("height", height);
+        if (theme !== "github") params.append("theme", theme);
+        if (stats) params.append("stats", "true");
+        if (credit) params.append("credit", "true");
+
+        const url = `${baseUrl}/api/graph?${params.toString()}`;
+
+        // Format output based on selection
+        let output = url;
+        if (format === "markdown") {
+          output = `![GitHub Contributions](${url})`;
+        } else if (format === "html") {
+          output = `<img src="${url}" alt="GitHub Contributions" />`;
+        }
+
+        document.getElementById("generatedUrl").value = output;
+
+        // Update preview
+        const previewContainer = document.getElementById("previewContainer");
+        previewContainer.innerHTML = `
+          <div style="width: 100%">
+            <img 
+              src="${url}" 
+              alt="Graph preview" 
+              style="max-width: 100%; height: auto; border-radius: 4px"
+              onload="this.style.display='block'"
+              onerror="this.parentElement.innerHTML='<div style=\\'color: #cf222e; padding: 20px\\'>Failed to load preview. Please check the username.</div>'"
+            />
+            <div style="margin-top: 8px; color: #586069; font-size: 12px">
+              Preview may take a few seconds to load on first request
+            </div>
+          </div>
+        `;
+      }
+
+      function copyUrl() {
+        const urlInput = document.getElementById("generatedUrl");
+        urlInput.select();
+        urlInput.setSelectionRange(0, 99999); // For mobile devices
+
+        try {
+          navigator.clipboard.writeText(urlInput.value);
+          const button = document.getElementById("copyButton");
+          const originalText = button.textContent;
+          button.textContent = "Copied!";
+          button.style.background = "#1a7f37";
+
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = "#0969da";
+          }, 2000);
+        } catch (err) {
+          // Fallback for older browsers
+          document.execCommand("copy");
+          alert("Copied to clipboard!");
+        }
+      }
+
+      // Add event listeners to all URL builder inputs
+      document.addEventListener("DOMContentLoaded", function () {
+        const builderInputs = [
+          "builderUsername",
+          "builderYear",
+          "builderWidth",
+          "builderHeight",
+          "builderTheme",
+          "builderStats",
+          "builderCredit",
+        ];
+
+        builderInputs.forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.addEventListener("input", buildUrl);
+            element.addEventListener("change", buildUrl);
+          }
+        });
+      });
+
       // Switch between 30 days and lifetime views
       function switchPeriod(period) {
         currentPeriod = period;
@@ -679,10 +1226,20 @@
               parseInt(day.cache_hits || 0),
             );
 
-            // Create chart
+            // Create 30-day chart with modern styling
             const ctx = document
               .getElementById("analyticsChart")
               .getContext("2d");
+
+            // Create gradients
+            const gradientBlue = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientBlue.addColorStop(0, "rgba(9, 105, 218, 0.2)");
+            gradientBlue.addColorStop(1, "rgba(9, 105, 218, 0.01)");
+
+            const gradientGreen = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientGreen.addColorStop(0, "rgba(26, 127, 55, 0.2)");
+            gradientGreen.addColorStop(1, "rgba(26, 127, 55, 0.01)");
+
             new Chart(ctx, {
               type: "line",
               data: {
@@ -692,45 +1249,37 @@
                     label: "Total Requests",
                     data: requestData,
                     borderColor: "#0969da",
-                    backgroundColor: "rgba(9, 105, 218, 0.1)",
+                    backgroundColor: gradientBlue,
+                    borderWidth: 2.5,
                     tension: 0.4,
                     fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: "#0969da",
+                    pointHoverBorderColor: "#fff",
+                    pointHoverBorderWidth: 2,
                   },
                   {
                     label: "Cache Hits",
                     data: cacheHitData,
                     borderColor: "#1a7f37",
-                    backgroundColor: "rgba(26, 127, 55, 0.1)",
+                    backgroundColor: gradientGreen,
+                    borderWidth: 2.5,
                     tension: 0.4,
                     fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: "#1a7f37",
+                    pointHoverBorderColor: "#fff",
+                    pointHoverBorderWidth: 2,
                   },
                 ],
               },
-              options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                  legend: {
-                    display: true,
-                    position: "top",
-                  },
-                  title: {
-                    display: false,
-                  },
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      precision: 0,
-                    },
-                  },
-                },
-              },
+              options: chartConfig,
             });
           }
 
-          // Update lifetime stats
+          // Update lifetime stats and chart
           if (lifetime) {
             document.getElementById("lifetimeTotalRequests").textContent = (
               parseInt(lifetime.total_requests) || 0
@@ -754,6 +1303,111 @@
                   hour: "2-digit",
                   minute: "2-digit",
                 });
+            }
+
+            // Create lifetime chart with aggregated daily data
+            const lifetimeCtx = document
+              .getElementById("lifetimeChart")
+              .getContext("2d");
+
+            // Use all available daily stats for lifetime chart (make a copy to avoid mutation)
+            const allStats = [...(data.daily_stats || [])];
+            if (allStats.length > 0) {
+              const lifetimeLabels = allStats.reverse().map((day) =>
+                new Date(day.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                }),
+              );
+              const lifetimeRequestData = allStats.map((day) =>
+                parseInt(day.total_requests || 0),
+              );
+              const lifetimeCacheData = allStats.map((day) =>
+                parseInt(day.cache_hits || 0),
+              );
+              const lifetimeUniqueData = allStats.map((day) =>
+                parseInt(day.unique_users || 0),
+              );
+
+              // Create gradients for lifetime chart
+              const gradientPurple = lifetimeCtx.createLinearGradient(
+                0,
+                0,
+                0,
+                300,
+              );
+              gradientPurple.addColorStop(0, "rgba(130, 80, 223, 0.2)");
+              gradientPurple.addColorStop(1, "rgba(130, 80, 223, 0.01)");
+
+              const gradientOrange = lifetimeCtx.createLinearGradient(
+                0,
+                0,
+                0,
+                300,
+              );
+              gradientOrange.addColorStop(0, "rgba(191, 57, 137, 0.2)");
+              gradientOrange.addColorStop(1, "rgba(191, 57, 137, 0.01)");
+
+              const gradientTeal = lifetimeCtx.createLinearGradient(
+                0,
+                0,
+                0,
+                300,
+              );
+              gradientTeal.addColorStop(0, "rgba(26, 127, 55, 0.2)");
+              gradientTeal.addColorStop(1, "rgba(26, 127, 55, 0.01)");
+
+              new Chart(lifetimeCtx, {
+                type: "line",
+                data: {
+                  labels: lifetimeLabels,
+                  datasets: [
+                    {
+                      label: "Total Requests",
+                      data: lifetimeRequestData,
+                      borderColor: "#8250df",
+                      backgroundColor: gradientPurple,
+                      borderWidth: 2.5,
+                      tension: 0.4,
+                      fill: true,
+                      pointRadius: 0,
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#8250df",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                    },
+                    {
+                      label: "Cache Hits",
+                      data: lifetimeCacheData,
+                      borderColor: "#bf3989",
+                      backgroundColor: gradientOrange,
+                      borderWidth: 2.5,
+                      tension: 0.4,
+                      fill: true,
+                      pointRadius: 0,
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#bf3989",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                    },
+                    {
+                      label: "Unique Users",
+                      data: lifetimeUniqueData,
+                      borderColor: "#1a7f37",
+                      backgroundColor: gradientTeal,
+                      borderWidth: 2.5,
+                      tension: 0.4,
+                      fill: true,
+                      pointRadius: 0,
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#1a7f37",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                    },
+                  ],
+                },
+                options: chartConfig,
+              });
             }
           }
         } catch (error) {
