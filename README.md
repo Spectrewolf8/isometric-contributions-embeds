@@ -269,46 +269,6 @@ import { setTheme } from "./src/renderer.js";
 setTheme(NEON_THEME);
 ```
 
-## Deployment
-
-### Deploy on Render (Recommended)
-
-This project is optimized for Render deployment with Docker support.
-
-**Quick Deploy:**
-
-1. Push to GitHub
-2. Create new Web Service on [Render](https://render.com)
-3. Connect your repo and select **Docker** environment
-4. Add environment variables:
-
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_BUCKET_NAME`
-
-5. Deploy!
-
-**Why Docker?**
-The `canvas` package requires system libraries (Cairo, Pango) that are automatically installed via the Dockerfile.
-
-### Minimal Deployment (Docker CLI)
-
-```bash
-# Build image
-docker build -t isometric-contributions .
-
-# Run container with required env vars
-docker run -p 3000:3000 \
-  -e SUPABASE_URL=your-url \
-  -e SUPABASE_ANON_KEY=your-anon-key \
-  -e SUPABASE_BUCKET_NAME=isometric-cache \
-  isometric-contributions
-```
-
-### Other Platforms
-
-The Docker setup works on any platform supporting containers (Railway, Fly.io, Cloud Run, ECS, Azure Container Apps).
-
 ## Embedding in README
 
 ### Markdown
@@ -471,18 +431,14 @@ CACHE_RETENTION_DAYS=7 npm run cleanup
 
 **Check cleanup logs:**
 
-The cleanup script outputs detailed logs:
+The cleanup script outputs logs:
 
 ```
-🧹 Starting cache cleanup...
-📅 Retention: 1 day(s)
-📦 Bucket: isometric-cache
-🔪 Cutoff date: 2026-02-01
-📊 Total files: 27
-🎯 Files to delete: 5
-✅ Successfully deleted 5 file(s)
-   🗑️  spectrewolf8/2026-02-01/abc123.png
-   ...
+🧹 Cleaning cache (retention: 1 day(s))
+📅 Deleting folders older than 2026-02-02
+✅ No old folders to delete
+
+✨ Cleanup completed
 ```
 
 ## Acknowledgements
