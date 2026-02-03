@@ -7,12 +7,12 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
 <table>
   <tr>
     <td align="center">
-      <img src="media/examples/output.png" width="300" alt="Default Theme"/><br/>
-      <b>Default</b>
-    </td>
-    <td align="center">
       <img src="media/examples/output-github.png" width="300" alt="GitHub Theme"/><br/>
       <b>GitHub Theme</b>
+    </td>
+    <td align="center">
+      <img src="media/examples/output-light.png" width="300" alt="Light Theme"/><br/>
+      <b>Light Theme</b>
     </td>
     <td align="center">
       <img src="media/examples/output-dark.png" width="300" alt="Dark Theme"/><br/>
@@ -39,12 +39,12 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
       <b>Without Stats</b>
     </td>
     <td align="center">
-      <img src="media/examples/output-no-credit.png" width="300" alt="With Credit"/><br/>
+      <img src="media/examples/output-no-credit.png" width="300" alt="Without Credit"/><br/>
       <b>Without Credit</b>
     </td>
     <td align="center">
-      <img src="media/examples/output-light.png" width="300" alt="Light Theme"/><br/>
-      <b>Light Theme</b>
+      <img src="media/examples/output.png" width="300" alt="Default Theme"/><br/>
+      <b>Default</b>
     </td>
   </tr>
 </table>
