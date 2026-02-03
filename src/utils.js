@@ -9,9 +9,9 @@
  * @returns {number} Rounded number
  */
 export const precisionRound = (number, precision) => {
-  const factor = 10 ** precision
-  return Math.round(number * factor) / factor
-}
+  const factor = 10 ** precision;
+  return Math.round(number * factor) / factor;
+};
 
 /**
  * Convert an RGB string to hex format.
@@ -19,30 +19,34 @@ export const precisionRound = (number, precision) => {
  * @returns {string} Hex string without # prefix, e.g., "ff8000"
  */
 export const rgbToHex = (rgb) => {
-  const separator = rgb.includes(',') ? ',' : ' '
+  const separator = rgb.includes(",") ? "," : " ";
   return rgb
     .slice(4, -1)
     .split(separator)
-    .map((n) => Number(n).toString(16).padStart(2, '0'))
-    .join('')
-}
+    .map((n) => Number(n).toString(16).padStart(2, "0"))
+    .join("");
+};
 
 /**
- * Calculate the difference in days between two dates.
+ * Calculate the difference in days between two dates (inclusive).
  * @param {Date|null} date1 - First date
  * @param {Date|null} date2 - Second date
- * @returns {number|null} Number of days between the dates, or null if either date is null
+ * @returns {number|null} Number of days between the dates (inclusive), or null if either date is null
  */
 export const datesDayDifference = (date1, date2) => {
-  let diffDays = null
+  let diffDays = null;
 
   if (date1 && date2) {
-    const timeDiff = Math.abs(date2.getTime() - date1.getTime())
-    diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24))
+    // Normalize dates to start of day to avoid time component issues
+    const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
+    const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
+    const timeDiff = Math.abs(d2.getTime() - d1.getTime());
+    // Add 1 to make it inclusive (e.g., Jan 1 to Jan 3 = 3 days, not 2)
+    diffDays = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
   }
 
-  return diffDays
-}
+  return diffDays;
+};
 
 /**
  * Check if two dates represent the same calendar day.
@@ -50,7 +54,7 @@ export const datesDayDifference = (date1, date2) => {
  * @param {Date} d2 - Second date
  * @returns {boolean} True if both dates are the same day
  */
-export const sameDay = (d1, d2) => d1.toDateString() === d2.toDateString()
+export const sameDay = (d1, d2) => d1.toDateString() === d2.toDateString();
 
 /**
  * Parse contribution count from GitHub tooltip text.
@@ -62,15 +66,15 @@ export const sameDay = (d1, d2) => d1.toDateString() === d2.toDateString()
  * @returns {number} The contribution count (0 if no match or "No contributions")
  */
 export const getContributionCount = (text) => {
-  const contributionMatches = text.match(/(\d+|No) contributions? on/)
+  const contributionMatches = text.match(/(\d+|No) contributions? on/);
   if (!contributionMatches) {
-    return 0
+    return 0;
   }
 
-  return contributionMatches[1] === 'No'
+  return contributionMatches[1] === "No"
     ? 0
-    : Number.parseInt(contributionMatches[1], 10)
-}
+    : Number.parseInt(contributionMatches[1], 10);
+};
 
 /**
  * Calculate streak statistics from an array of daily contribution data.
@@ -88,66 +92,100 @@ export const getContributionCount = (text) => {
  * }}
  */
 export const calculateStreaks = (days) => {
-  let yearTotal = 0
-  let maxCount = 0
-  let bestDay = null
-  let streakLongest = 0
-  let longestStreakStart = null
-  let longestStreakEnd = null
-  let temporaryStreak = 0
-  let temporaryStreakStart = null
+  let yearTotal = 0;
+  let maxCount = 0;
+  let bestDay = null;
+  let streakLongest = 0;
+  let longestStreakStart = null;
+  let longestStreakEnd = null;
+  let temporaryStreak = 0;
+  let temporaryStreakStart = null;
 
   for (const d of days) {
-    const currentDayCount = d.count
-    yearTotal += currentDayCount
+    const currentDayCount = d.count;
+    yearTotal += currentDayCount;
 
     // Check for best day
     if (currentDayCount > maxCount) {
-      bestDay = d.date
-      maxCount = currentDayCount
+      bestDay = d.date;
+      maxCount = currentDayCount;
     }
 
     // Check for longest streak
     if (currentDayCount > 0) {
       if (temporaryStreak === 0) {
-        temporaryStreakStart = d.date
+        temporaryStreakStart = d.date;
       }
 
-      temporaryStreak++
+      temporaryStreak++;
 
       if (temporaryStreak >= streakLongest) {
-        longestStreakStart = temporaryStreakStart
-        longestStreakEnd = d.date
-        streakLongest = temporaryStreak
+        longestStreakStart = temporaryStreakStart;
+        longestStreakEnd = d.date;
+        streakLongest = temporaryStreak;
       }
     } else {
-      temporaryStreak = 0
-      temporaryStreakStart = null
+      temporaryStreak = 0;
+      temporaryStreakStart = null;
     }
   }
 
   // Calculate current streak (from most recent day backwards)
-  let streakCurrent = 0
-  let currentStreakStart = null
-  let currentStreakEnd = null
-  const reversedDays = [...days].reverse()
+  let streakCurrent = 0;
+  let currentStreakStart = null;
+  let currentStreakEnd = null;
+  const reversedDays = [...days].reverse();
 
   if (reversedDays.length > 0) {
-    currentStreakEnd = reversedDays[0].date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    for (let i = 0; i < reversedDays.length; i++) {
-      const currentDayCount = reversedDays[i].count
-      // If there's no activity today, continue on to yesterday
-      if (i === 0 && currentDayCount === 0 && reversedDays.length > 1) {
-        currentStreakEnd = reversedDays[1].date
-        continue
-      }
+    // Find today and yesterday in the data
+    const todayEntry = reversedDays.find((d) => sameDay(d.date, today));
+    const yesterdayDate = new Date(today);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayEntry = reversedDays.find((d) =>
+      sameDay(d.date, yesterdayDate),
+    );
+
+    let startIndex = -1;
+
+    // Determine where to start counting from
+    if (todayEntry && todayEntry.count > 0) {
+      // Today has contributions, start from today
+      startIndex = reversedDays.indexOf(todayEntry);
+    } else if (yesterdayEntry && yesterdayEntry.count > 0) {
+      // Today has no contributions (or doesn't exist), but yesterday does
+      // Allow 1-day grace period
+      startIndex = reversedDays.indexOf(yesterdayEntry);
+    } else {
+      // No current streak
+      return {
+        yearTotal,
+        maxCount,
+        bestDay,
+        streakLongest,
+        longestStreakStart,
+        longestStreakEnd,
+        streakCurrent: 0,
+        currentStreakStart: null,
+        currentStreakEnd: null,
+      };
+    }
+
+    // Count consecutive days with contributions from the starting point backwards
+    for (let i = startIndex; i < reversedDays.length; i++) {
+      const currentDayCount = reversedDays[i].count;
 
       if (currentDayCount > 0) {
-        streakCurrent++
-        currentStreakStart = reversedDays[i].date
+        if (streakCurrent === 0) {
+          currentStreakEnd = reversedDays[i].date;
+        }
+        streakCurrent++;
+        currentStreakStart = reversedDays[i].date;
       } else {
-        break
+        // Stop at first day with no contributions
+        break;
       }
     }
   }
@@ -161,9 +199,9 @@ export const calculateStreaks = (days) => {
     longestStreakEnd,
     streakCurrent,
     currentStreakStart,
-    currentStreakEnd
-  }
-}
+    currentStreakEnd,
+  };
+};
 
 // =============================================================================
 // DOM-related functions (testable with jsdom)
@@ -175,10 +213,10 @@ export const calculateStreaks = (days) => {
  * @param {string} type - View type ('squares', 'cubes', or 'both')
  */
 export const applyViewType = (element, type) => {
-  element.classList.toggle('ic-squares', type === 'squares')
-  element.classList.toggle('ic-cubes', type === 'cubes')
-  element.classList.toggle('ic-both', type === 'both')
-}
+  element.classList.toggle("ic-squares", type === "squares");
+  element.classList.toggle("ic-cubes", type === "cubes");
+  element.classList.toggle("ic-both", type === "both");
+};
 
 /**
  * Get the fill color of an element as a hex string.
@@ -188,10 +226,10 @@ export const applyViewType = (element, type) => {
  */
 export const getElementColor = (
   element,
-  getComputedStyleFn = globalThis.getComputedStyle
+  getComputedStyleFn = globalThis.getComputedStyle,
 ) => {
-  return rgbToHex(getComputedStyleFn(element).getPropertyValue('fill'))
-}
+  return rgbToHex(getComputedStyleFn(element).getPropertyValue("fill"));
+};
 
 /**
  * Parse contribution data from GitHub calendar DOM elements.
@@ -203,27 +241,27 @@ export const getElementColor = (
 export const parseCalendarGraph = (
   dayElements,
   tooltipElements,
-  getColorFn
+  getColorFn,
 ) => {
   const dayNodes = [...dayElements].map((d) => ({
     date: new Date(d.dataset.date),
     week: d.dataset.ix,
     color: getColorFn(d),
-    tid: d.getAttribute('aria-labelledby')
-  }))
+    tid: d.getAttribute("aria-labelledby"),
+  }));
 
   const tooltipNodes = [...tooltipElements].map((t) => ({
     tid: t.id,
-    count: getContributionCount(t.textContent)
-  }))
+    count: getContributionCount(t.textContent),
+  }));
 
   const data = dayNodes.map((d) => ({
     ...d,
-    ...tooltipNodes.find((t) => t.tid === d.tid)
-  }))
+    ...tooltipNodes.find((t) => t.tid === d.tid),
+  }));
 
-  return data.sort((a, b) => a.date.getTime() - b.date.getTime())
-}
+  return data.sort((a, b) => a.date.getTime() - b.date.getTime());
+};
 
 // =============================================================================
 // Settings functions
@@ -238,19 +276,19 @@ export const parseCalendarGraph = (
  */
 export const loadSetting = (storage, key, defaultValue) => {
   return new Promise((resolve) => {
-    if (storage && typeof storage.get === 'function') {
+    if (storage && typeof storage.get === "function") {
       // Chrome storage API
       storage.get([key], (result) => {
-        resolve(result[key] ?? defaultValue)
-      })
+        resolve(result[key] ?? defaultValue);
+      });
     } else if (storage) {
       // LocalStorage-like API
-      resolve(storage[key] ?? defaultValue)
+      resolve(storage[key] ?? defaultValue);
     } else {
-      resolve(defaultValue)
+      resolve(defaultValue);
     }
-  })
-}
+  });
+};
 
 /**
  * Save a setting to storage.
@@ -259,14 +297,14 @@ export const loadSetting = (storage, key, defaultValue) => {
  * @param {*} value - Value to save
  */
 export const saveSetting = (storage, key, value) => {
-  if (storage && typeof storage.set === 'function') {
+  if (storage && typeof storage.set === "function") {
     // Chrome storage API
-    storage.set({ [key]: value })
+    storage.set({ [key]: value });
   } else if (storage) {
     // LocalStorage-like API
-    storage[key] = value
+    storage[key] = value;
   }
-}
+};
 
 // =============================================================================
 // Markup generation functions
@@ -294,9 +332,9 @@ export const generateContributionsMarkup = (stats, options = {}) => {
     weekDatesTotal,
     maxCount,
     dateBest,
-    averageCount
-  } = stats
-  const { showWeek = true } = options
+    averageCount,
+  } = stats;
+  const { showWeek = true } = options;
 
   let markup = `
     <div class="position-absolute top-0 right-0 mt-3 mr-5">
@@ -307,7 +345,7 @@ export const generateContributionsMarkup = (stats, options = {}) => {
           <span class="d-block text-small text-bold">Total</span>
           <span class="d-none d-sm-block text-small color-fg-muted">${datesTotal}</span>
         </div>
-    `
+    `;
 
   if (showWeek) {
     markup += `
@@ -316,7 +354,7 @@ export const generateContributionsMarkup = (stats, options = {}) => {
         <span class="d-block text-small text-bold">This week</span>
         <span class="d-none d-sm-block text-small color-fg-muted">${weekDatesTotal}</span>
       </div>
-    `
+    `;
   }
 
   markup += `
@@ -330,10 +368,10 @@ export const generateContributionsMarkup = (stats, options = {}) => {
       Average: <span class="text-bold color-fg-success">${averageCount}</span> <span class="color-fg-muted">/ day</span>
       </p>
     </div>
-  `
+  `;
 
-  return markup
-}
+  return markup;
+};
 
 /**
  * Generate the streaks stats markup.
@@ -347,8 +385,8 @@ export const generateContributionsMarkup = (stats, options = {}) => {
  * @returns {string} HTML markup
  */
 export const generateStreaksMarkup = (stats, options = {}) => {
-  const { streakLongest, datesLongest, streakCurrent, datesCurrent } = stats
-  const { showCurrent = true } = options
+  const { streakLongest, datesLongest, streakCurrent, datesCurrent } = stats;
+  const { showCurrent = true } = options;
 
   let markup = `
     <div class="position-absolute bottom-0 left-0 ml-5 mb-6">
@@ -359,7 +397,7 @@ export const generateStreaksMarkup = (stats, options = {}) => {
           <span class="d-block text-small text-bold">Longest</span>
           <span class="d-none d-sm-block text-small color-fg-muted">${datesLongest}</span>
         </div>
-    `
+    `;
 
   if (showCurrent) {
     markup += `
@@ -370,8 +408,8 @@ export const generateStreaksMarkup = (stats, options = {}) => {
           </div>
         </div>
       </div>
-    `
+    `;
   }
 
-  return markup
-}
+  return markup;
+};

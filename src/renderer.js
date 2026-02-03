@@ -21,11 +21,6 @@ import { GITHUB_THEME } from "./theme-config.js";
 // Available themes: GITHUB_THEME, DARK_THEME, LIGHT_THEME, NEON_THEME, MINIMAL_THEME, OCEAN_THEME
 let STYLE_CONFIG = { ...GITHUB_THEME };
 
-// Helper function to create font string
-function getFontString(style) {
-  return `${style.fontWeight} ${style.fontSize}px "${style.fontFamily}", sans-serif`;
-}
-
 /**
  * Set the active theme
  * @param {Object} theme - Theme configuration object
@@ -247,8 +242,13 @@ export function calculateStats(days) {
   }
 
   const firstDay = days[0].date;
-  const lastDay =
-    days.find((d) => sameDay(d.date, new Date()))?.date ?? days.at(-1).date;
+  // Find today's date in the data, or use the last day if today is not in the data
+  const todayDate = new Date();
+  const todayEntry = days.find((d) => {
+    const dayDate = d.date instanceof Date ? d.date : new Date(d.date);
+    return sameDay(dayDate, todayDate);
+  });
+  const lastDay = todayEntry?.date ?? days.at(-1).date;
 
   // Calculate streaks
   const stats = calculateStreaks(days);
@@ -265,7 +265,8 @@ export function calculateStats(days) {
 
   // Average contributions per day
   const dayDifference = datesDayDifference(firstDay, lastDay);
-  const averageCount = precisionRound(yearTotal / dayDifference, 2);
+  const averageCount =
+    dayDifference > 0 ? precisionRound(yearTotal / dayDifference, 2) : 0;
 
   // Best day
   const dateBest = bestDay ? dateFormat.format(bestDay) : "No activity found";
@@ -285,26 +286,34 @@ export function calculateStats(days) {
     datesCurrent = `${currentStart} → ${currentEnd}`;
   }
 
-  // Week total (last week)
-  const weeks = Object.values(
-    days.reduce((acc, day) => {
-      const key = day.week;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(day);
-      return acc;
-    }, {}),
-  );
-  const currentWeekDays = weeks.at(-1) || [];
+  // Week total (current calendar week - from Sunday to today)
+  const currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+
+  // Get the start of the current week (Sunday)
+  const currentWeekStart = new Date(currentDate);
+  const dayOfWeek = currentWeekStart.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  currentWeekStart.setDate(currentWeekStart.getDate() - dayOfWeek); // Go back to Sunday
+  currentWeekStart.setHours(0, 0, 0, 0);
+
+  const currentWeekDays = days.filter((d) => {
+    const dayDate = d.date instanceof Date ? d.date : new Date(d.date);
+    const normalizedDay = new Date(dayDate);
+    normalizedDay.setHours(0, 0, 0, 0);
+    return normalizedDay >= currentWeekStart && normalizedDay <= currentDate;
+  });
+
   let weekTotal = 0;
   for (const d of currentWeekDays) {
     weekTotal += d.count;
   }
 
   const weekStartDay = currentWeekDays[0]?.date;
+  const weekEndDay = currentWeekDays.at(-1)?.date;
   const weekDateFirst = weekStartDay ? dateFormat.format(weekStartDay) : "";
-  const weekDatesTotal = weekStartDay ? `${weekDateFirst} → ${dateLast}` : "";
+  const weekDateLast = weekEndDay ? dateFormat.format(weekEndDay) : "";
+  const weekDatesTotal =
+    weekStartDay && weekEndDay ? `${weekDateFirst} → ${weekDateLast}` : "";
 
   return {
     yearTotal,
