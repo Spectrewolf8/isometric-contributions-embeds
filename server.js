@@ -66,7 +66,7 @@ function getCacheKey(username, params) {
   const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
   const paramsStr = JSON.stringify(params);
   const hash = Buffer.from(paramsStr).toString("base64").replace(/[/+=]/g, "");
-  return `${username}/${date}/${hash}.png`;
+  return `daily/${date}/${username}/${hash}.png`;
 }
 
 /**

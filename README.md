@@ -426,22 +426,6 @@ The cleanup script:
 
 ### Production Deployment
 
-**With PM2 (process manager):**
-
-```bash
-# Start server
-pm2 start server.js --name api
-
-# Start cleanup scheduler
-pm2 start cleanup-scheduler.js --name cache-cleanup
-
-# Save configuration
-pm2 save
-
-# Setup startup script
-pm2 startup
-```
-
 **Docker/Render/Railway:**
 
 The Dockerfile automatically starts both processes:

@@ -11,6 +11,14 @@ import { createClient } from "@supabase/supabase-js";
 const BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME || "isometric-cache";
 const RETENTION_DAYS = parseInt(process.env.CACHE_RETENTION_DAYS || "1", 10);
 
+// Check if environment variables are set
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+  console.error(
+    "❌ Missing Supabase credentials. Copy .env.example to .env and configure.",
+  );
+  process.exit(1);
+}
+
 // Initialize Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -18,94 +26,91 @@ const supabase = createClient(
 );
 
 /**
- * Delete files older than retention period
+ * Delete daily folders older than retention period
  * @returns {Promise<{deleted: number, errors: number}>}
  */
 async function cleanupOldCache() {
-  console.log(`\n🧹 Starting cache cleanup...`);
-  console.log(`📅 Retention: ${RETENTION_DAYS} day(s)`);
-  console.log(`📦 Bucket: ${BUCKET_NAME}`);
+  console.log(`\n🧹 Cleaning cache (retention: ${RETENTION_DAYS} day(s))`);
 
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
   const cutoffDateStr = cutoffDate.toISOString().split("T")[0]; // YYYY-MM-DD
 
-  console.log(`🔪 Cutoff date: ${cutoffDateStr}`);
-  console.log(`⏰ Cutoff timestamp: ${cutoffDate.toISOString()}`);
+  console.log(`📅 Deleting folders older than ${cutoffDateStr}`);
 
   try {
-    // List all files in bucket
-    const { data: files, error: listError } = await supabase.storage
+    // List daily folders
+    const { data: folders, error: listError } = await supabase.storage
       .from(BUCKET_NAME)
-      .list("", {
+      .list("daily", {
         limit: 1000,
-        sortBy: { column: "created_at", order: "asc" },
+        sortBy: { column: "name", order: "asc" },
       });
 
     if (listError) {
-      console.error("❌ Error listing files:", listError);
+      console.error("❌ Error listing folders:", listError);
       return { deleted: 0, errors: 1 };
     }
 
-    if (!files || files.length === 0) {
-      console.log("✅ No files found in bucket");
+    if (!folders || folders.length === 0) {
+      console.log("✅ No daily folders found");
       return { deleted: 0, errors: 0 };
     }
 
-    console.log(`📊 Total files in bucket: ${files.length}`);
-
-    // Recursively list all files including subfolders
-    const allFiles = await listAllFiles(BUCKET_NAME);
-    console.log(`📊 Total files (including subfolders): ${allFiles.length}`);
-
-    let deleted = 0;
+    let deletedFolders = 0;
     let errors = 0;
-    const filesToDelete = [];
+    const foldersToDelete = [];
 
-    // Filter files to delete
-    for (const file of allFiles) {
-      const shouldDelete = shouldDeleteFile(file, cutoffDate, cutoffDateStr);
+    // Filter folders to delete (folders older than cutoff date)
+    for (const folder of folders) {
+      const folderName = folder.name;
 
-      if (shouldDelete) {
-        filesToDelete.push(file.name);
+      // Check if folder name matches date pattern and is old enough
+      if (
+        /^\d{4}-\d{2}-\d{2}$/.test(folderName) &&
+        folderName <= cutoffDateStr
+      ) {
+        foldersToDelete.push(folderName);
       }
     }
 
-    console.log(`🎯 Files to delete: ${filesToDelete.length}`);
-
-    // Delete files in batches
-    if (filesToDelete.length > 0) {
-      // Supabase storage remove() accepts array of paths
-      const { data, error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .remove(filesToDelete);
-
-      if (error) {
-        console.error("❌ Error deleting files:", error);
-        errors = filesToDelete.length;
-      } else {
-        deleted = filesToDelete.length;
-        console.log(`✅ Successfully deleted ${deleted} file(s)`);
-
-        // Log some examples
-        const examples = filesToDelete.slice(0, 5);
-        examples.forEach((path) => {
-          console.log(`   🗑️  ${path}`);
-        });
-        if (filesToDelete.length > 5) {
-          console.log(`   ... and ${filesToDelete.length - 5} more`);
-        }
-      }
+    if (foldersToDelete.length === 0) {
+      console.log("✅ No old folders to delete");
     } else {
-      console.log("✅ No old files to delete");
+      console.log(`🗑️  Deleting ${foldersToDelete.length} folder(s)...`);
     }
 
-    console.log(`\n📈 Summary:`);
-    console.log(`   Deleted: ${deleted}`);
-    console.log(`   Errors: ${errors}`);
-    console.log(`   Remaining: ${allFiles.length - deleted}`);
+    // Delete each old folder completely
+    for (const folderName of foldersToDelete) {
+      try {
+        const allFiles = await listAllFiles(BUCKET_NAME, `daily/${folderName}`);
 
-    return { deleted, errors };
+        if (allFiles.length > 0) {
+          const { error: deleteError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .remove(allFiles.map((f) => f.name));
+
+          if (deleteError) {
+            console.error(`❌ Error deleting ${folderName}:`, deleteError);
+            errors++;
+          } else {
+            console.log(`   ✓ ${folderName} (${allFiles.length} files)`);
+            deletedFolders++;
+          }
+        } else {
+          deletedFolders++;
+        }
+      } catch (error) {
+        console.error(`❌ Error processing ${folderName}:`, error);
+        errors++;
+      }
+    }
+
+    if (deletedFolders > 0 || errors > 0) {
+      console.log(`\n📊 Deleted: ${deletedFolders}, Errors: ${errors}`);
+    }
+
+    return { deleted: deletedFolders, errors };
   } catch (error) {
     console.error("❌ Unexpected error:", error);
     return { deleted: 0, errors: 1 };
@@ -157,41 +162,16 @@ async function listAllFiles(bucketName, path = "") {
   return allFiles;
 }
 
-/**
- * Determine if a file should be deleted
- * @param {Object} file
- * @param {Date} cutoffDate
- * @param {string} cutoffDateStr - YYYY-MM-DD format
- * @returns {boolean}
- */
-function shouldDeleteFile(file, cutoffDate, cutoffDateStr) {
-  // Delete .emptyFolderPlaceholder files
-  if (file.name.endsWith(".emptyFolderPlaceholder")) {
-    return true;
-  }
+// Run cleanup if called directly (handles Windows paths and URL encoding)
+const isMainModule = () => {
+  const scriptPath = process.argv[1]?.replace(/\\/g, "/");
+  const modulePath = decodeURIComponent(import.meta.url)
+    .replace("file:///", "")
+    .replace(/^\/([A-Z]:)/, "$1");
+  return modulePath === scriptPath || import.meta.url.endsWith(process.argv[1]);
+};
 
-  // Check creation timestamp
-  if (file.created_at) {
-    const fileDate = new Date(file.created_at);
-    if (fileDate < cutoffDate) {
-      return true;
-    }
-  }
-
-  // Check date folder in path (username/YYYY-MM-DD/hash.png)
-  const dateMatch = file.name.match(/\/(\d{4}-\d{2}-\d{2})\//);
-  if (dateMatch) {
-    const folderDate = dateMatch[1];
-    if (folderDate < cutoffDateStr) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-// Run cleanup if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule()) {
   cleanupOldCache()
     .then(({ deleted, errors }) => {
       console.log("\n✨ Cleanup completed\n");
