@@ -1410,7 +1410,7 @@
               cacheHitRate + "%";
 
             // Prepare chart data (reverse to show oldest to newest)
-            const chartData = stats.reverse();
+            const chartData = [...stats].reverse();
             const labels = chartData.map((day) =>
               new Date(day.date).toLocaleDateString("en-US", {
                 month: "short",
