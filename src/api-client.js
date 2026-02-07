@@ -8,7 +8,7 @@ const API_BASE_URL = "https://github-contributions-api.jogruber.de/v4";
 /**
  * Fetch contribution data for a GitHub user
  * @param {string} username - GitHub username
- * @param {number} year - Year to fetch contributions for (required)
+ * @param {number|string} year - Year to fetch contributions for, or "none" for 365-day history
  * @returns {Promise<Object>} Contribution data
  */
 export async function fetchContributions(username, year) {
@@ -16,11 +16,16 @@ export async function fetchContributions(username, year) {
     throw new Error("Username is required");
   }
 
-  if (!year) {
-    throw new Error("Year is required");
+  // Handle 365-day rolling window mode
+  if (year === "none" || year === null || year === undefined) {
+    return fetchLast365Days(username);
   }
 
-  // Build URL
+  if (Number.isNaN(Number.parseInt(year, 10))) {
+    throw new Error("Year must be a number or 'none' for 365-day history");
+  }
+
+  // Build URL for specific year
   const params = new URLSearchParams();
   params.append("format", "nested");
   params.append("y", year.toString());
@@ -45,13 +50,69 @@ export async function fetchContributions(username, year) {
 }
 
 /**
+ * Fetch last 365 days of contribution data (rolling window ending today)
+ * @param {string} username - GitHub username
+ * @returns {Promise<Object>} Contribution data for last 365 days
+ */
+async function fetchLast365Days(username) {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const previousYear = currentYear - 1;
+
+  // Fetch both current and previous year to ensure we have at least 365 days
+  const params = new URLSearchParams();
+  params.append("format", "nested");
+
+  try {
+    // Fetch current year
+    const currentYearUrl = `${API_BASE_URL}/${encodeURIComponent(username)}?${params.toString()}&y=${currentYear}`;
+    const currentYearResponse = await fetch(currentYearUrl);
+
+    if (!currentYearResponse.ok) {
+      throw new Error(
+        `API request failed: ${currentYearResponse.status} ${currentYearResponse.statusText}`,
+      );
+    }
+
+    const currentYearData = await currentYearResponse.json();
+
+    // Fetch previous year
+    const prevYearUrl = `${API_BASE_URL}/${encodeURIComponent(username)}?${params.toString()}&y=${previousYear}`;
+    const prevYearResponse = await fetch(prevYearUrl);
+
+    let combinedData = { ...currentYearData, contributions: {} };
+
+    if (prevYearResponse.ok) {
+      const prevYearData = await prevYearResponse.json();
+      // Merge contributions from both years
+      if (prevYearData.contributions) {
+        combinedData.contributions = {
+          ...prevYearData.contributions,
+          ...currentYearData.contributions,
+        };
+      } else {
+        combinedData.contributions = currentYearData.contributions || {};
+      }
+    } else {
+      combinedData.contributions = currentYearData.contributions || {};
+    }
+
+    return combinedData;
+  } catch (error) {
+    console.error("Error fetching 365-day contribution data:", error);
+    throw error;
+  }
+}
+
+/**
  * Parse API response into a flat array of day objects
  * Compatible with the existing rendering code structure
  * @param {Object} apiData - Raw API response
+ * @param {boolean} use365Days - If true, filter to last 365 days ending today
  * @returns {Array<{date: Date, count: number, level: number, week: number}>}
  */
-export function parseContributionsData(apiData) {
-  const days = [];
+export function parseContributionsData(apiData, use365Days = false) {
+  let days = [];
 
   if (!apiData.contributions) {
     return days;
@@ -83,17 +144,40 @@ export function parseContributionsData(apiData) {
   // Sort by date
   days.sort((a, b) => a.date - b.date);
 
-  // Assign week numbers based on calendar weeks (Sunday as start of week)
-  days.forEach((day) => {
-    const dayOfWeek = day.date.getDay(); // 0 = Sunday
-    const startOfYear = new Date(day.date.getFullYear(), 0, 1);
-    const daysSinceStartOfYear = Math.floor(
-      (day.date - startOfYear) / (24 * 60 * 60 * 1000),
-    );
-    const weekOfYear = Math.floor(
-      (daysSinceStartOfYear + startOfYear.getDay()) / 7,
-    );
-    day.week = weekOfYear;
+  // Filter to last 365 days if requested
+  let startDate = null;
+  if (use365Days) {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const last365Days = new Date(today.getTime() - 364 * 24 * 60 * 60 * 1000);
+    last365Days.setHours(0, 0, 0, 0);
+    startDate = last365Days;
+
+    days = days.filter((day) => day.date >= last365Days && day.date <= today);
+  }
+
+  // Assign week numbers
+  days.forEach((day, index) => {
+    if (use365Days && startDate) {
+      // For 365-day mode, calculate weeks relative to the start date
+      // This ensures week 0 starts from the oldest day and progresses to oldest
+      const daysSinceStart = Math.floor(
+        (day.date - startDate) / (24 * 60 * 60 * 1000),
+      );
+      const weekNumber = Math.floor(daysSinceStart / 7);
+      day.week = weekNumber;
+    } else {
+      // For year mode, use calendar year weeks (original behavior)
+      const dayOfWeek = day.date.getDay(); // 0 = Sunday
+      const startOfYear = new Date(day.date.getFullYear(), 0, 1);
+      const daysSinceStartOfYear = Math.floor(
+        (day.date - startOfYear) / (24 * 60 * 60 * 1000),
+      );
+      const weekOfYear = Math.floor(
+        (daysSinceStartOfYear + startOfYear.getDay()) / 7,
+      );
+      day.week = weekOfYear;
+    }
   });
 
   return days;

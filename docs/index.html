@@ -243,12 +243,13 @@
         </tr>
         <tr>
           <td><code>year</code> / <code>y</code></td>
-          <td>number</td>
+          <td>number|string</td>
           <td>Optional</td>
-          <td>current year</td>
+          <td>none (365 days)</td>
           <td>
-            Year to fetch contributions for (supports <code>year</code> or
-            <code>y</code>)
+            Year to fetch contributions for (e.g., <code>2025</code>) or
+            <code>none</code> for 365-day rolling window ending today. Defaults
+            to 365-day history (supports <code>year</code> or <code>y</code>)
           </td>
         </tr>
         <tr>
@@ -756,13 +757,23 @@
     <h2>Examples</h2>
 
     <div class="example">
-      <h3>Basic usage:</h3>
+      <h3>Basic usage (365-day rolling window):</h3>
       <pre>/api/graph?username=spectrewolf8</pre>
+      <p>
+        <em
+          >By default, shows the last 365 days of contributions ending today</em
+        >
+      </p>
     </div>
 
     <div class="example">
       <h3>With specific year:</h3>
       <pre>/api/graph?username=spectrewolf8&amp;year=2025</pre>
+    </div>
+
+    <div class="example">
+      <h3>Explicit 365-day mode:</h3>
+      <pre>/api/graph?username=spectrewolf8&amp;year=none</pre>
     </div>
 
     <div class="example">

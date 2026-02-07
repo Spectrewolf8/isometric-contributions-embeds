@@ -156,13 +156,21 @@ function parseQueryParams(search) {
     params.get("y") ??
     params.get("Year") ??
     params.get("Y");
-  const parsedYear =
-    yearParam && !Number.isNaN(Number.parseInt(yearParam, 10))
-      ? Number.parseInt(yearParam, 10)
-      : new Date().getFullYear(); // Default to current year instead of null
+
+  // Default to "none" (365-day rolling window) if no year specified
+  // Or explicitly set to "none" to use 365-day mode
+  let year = "none";
+  if (yearParam) {
+    if (yearParam.toLowerCase() === "none") {
+      year = "none";
+    } else if (!Number.isNaN(Number.parseInt(yearParam, 10))) {
+      year = Number.parseInt(yearParam, 10);
+    }
+  }
+
   return {
     username: params.get("username") || "",
-    year: parsedYear,
+    year: year,
     width: params.get("width") ? parseInt(params.get("width"), 10) : 1000,
     height: params.get("height") ? parseInt(params.get("height"), 10) : 600,
     stats: params.get("stats") === "true",
@@ -184,19 +192,26 @@ async function generateGraph(params) {
     setTheme(AVAILABLE_THEMES[theme.toLowerCase()]);
   }
 
+  // Determine if using 365-day mode
+  const use365Days = year === "none";
+  const yearDisplay = use365Days ? "365-day history" : `year: ${year}`;
+
   // Fetch contribution data
   console.log(
-    `[FETCH] Fetching contributions for ${username} (year: ${year})...`,
+    `[FETCH] Fetching contributions for ${username} (${yearDisplay})...`,
   );
   const data = await fetchContributions(username, year);
 
   console.log(`[PARSE] Parsing contribution data...`);
-  const days = parseContributionsData(data);
+  const days = parseContributionsData(data, use365Days);
 
   console.log(`[RESULT] Parsed ${days.length} days of contribution data`);
 
   if (days.length === 0) {
-    throw new Error(`No contribution data found for ${username} in ${year}`);
+    const periodText = use365Days ? "past 365 days" : `year ${year}`;
+    throw new Error(
+      `No contribution data found for ${username} in ${periodText}`,
+    );
   }
 
   // Render options
