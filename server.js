@@ -125,6 +125,12 @@ async function cacheImage(cacheKey, imageBuffer) {
  */
 async function trackAnalytics(params, cacheHit) {
   try {
+    // Handle year parameter - convert "none" to null, otherwise to integer
+    let year = null;
+    if (params.year && params.year !== "none") {
+      year = parseInt(params.year, 10);
+    }
+
     const { error } = await supabase.from("api_analytics").insert({
       username: params.username,
       theme: params.theme || "github",
@@ -132,7 +138,7 @@ async function trackAnalytics(params, cacheHit) {
       height: params.height || 600,
       stats: params.stats || false,
       credit: params.credit || false,
-      year: params.year || new Date().getFullYear(),
+      year: year,
       cache_hit: cacheHit,
     });
 

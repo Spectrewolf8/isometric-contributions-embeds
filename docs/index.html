@@ -591,7 +591,7 @@
           </div>
           <div style="margin-top: 12px">
             <button
-              onclick="buildUrl()"
+              onclick="generatePreview()"
               style="
                 width: 100%;
                 padding: 10px 16px;
@@ -607,7 +607,7 @@
               onmouseover="this.style.background = 'var(--button-hover)'"
               onmouseout="this.style.background = 'var(--button-bg)'"
             >
-              Generate URL & Preview
+              Generate Preview
             </button>
           </div>
           <div style="display: flex; gap: 8px; margin-top: 12px">
@@ -1241,8 +1241,8 @@
         }
       }
 
-      // URL Builder functionality
-      function buildUrl() {
+      // Generate URL (called on input change)
+      function generateUrl() {
         const username = document
           .getElementById("builderUsername")
           .value.trim();
@@ -1253,16 +1253,14 @@
         const stats = document.getElementById("builderStats").checked;
         const credit = document.getElementById("builderCredit").checked;
 
+        if (!username) {
+          return;
+        }
+
         const baseUrl = window.location.origin;
         const format =
           document.querySelector('input[name="urlFormat"]:checked')?.value ||
           "url";
-
-        if (!username) {
-          alert("Please enter a GitHub username");
-          document.getElementById("builderUsername").focus();
-          return;
-        }
 
         const params = new URLSearchParams();
         params.append("username", username);
@@ -1285,15 +1283,52 @@
         }
 
         document.getElementById("generatedUrl").value = output;
+      }
 
-        // Update preview
+      // Generate image preview (called on button click only)
+      function generatePreview() {
+        const username = document
+          .getElementById("builderUsername")
+          .value.trim();
+
+        if (!username) {
+          alert("Please enter a GitHub username");
+          document.getElementById("builderUsername").focus();
+          return;
+        }
+
+        const year = document.getElementById("builderYear").value.trim();
+        const width = document.getElementById("builderWidth").value.trim();
+        const height = document.getElementById("builderHeight").value.trim();
+        const theme = document.getElementById("builderTheme").value;
+        const stats = document.getElementById("builderStats").checked;
+        const credit = document.getElementById("builderCredit").checked;
+
+        const baseUrl = window.location.origin;
+
+        const params = new URLSearchParams();
+        params.append("username", username);
+
+        if (year) params.append("year", year);
+        if (width) params.append("width", width);
+        if (height) params.append("height", height);
+        if (theme !== "github") params.append("theme", theme);
+        if (stats) params.append("stats", "true");
+        if (credit) params.append("credit", "true");
+
+        // Add cache-busting parameter to force fresh image load
+        params.append("t", Date.now());
+
+        const url = `${baseUrl}/api/graph?${params.toString()}`;
+
+        // Update preview with cache-busting parameter
         const previewContainer = document.getElementById("previewContainer");
         previewContainer.innerHTML = `
           <div style="width: 100%">
             <img 
               src="${url}" 
               alt="Graph preview" 
-              style="max-width: 100%; height: auto; border-radius: 4px"
+              style="max-width: 100%; height: auto; border-radius: 4px; display: none"
               onload="this.style.display='block'"
               onerror="this.parentElement.innerHTML='<div style=\\'color: #cf222e; padding: 20px\\'>Failed to load preview. Please check the username.</div>'"
             />
@@ -1330,23 +1365,50 @@
 
       // Add event listeners to all URL builder inputs
       document.addEventListener("DOMContentLoaded", function () {
-        // Add Enter key support to trigger URL generation
+        // Generate URL on input change
         const builderInputs = [
           "builderUsername",
           "builderYear",
           "builderWidth",
           "builderHeight",
+          "builderTheme",
+          "builderStats",
+          "builderCredit",
         ];
 
         builderInputs.forEach((id) => {
           const element = document.getElementById(id);
           if (element) {
-            element.addEventListener("keypress", function (e) {
-              if (e.key === "Enter") {
-                buildUrl();
-              }
+            element.addEventListener("change", function () {
+              generateUrl();
             });
+            element.addEventListener("input", function () {
+              generateUrl();
+            });
+            // Enter key generates preview
+            if (
+              id === "builderUsername" ||
+              id === "builderYear" ||
+              id === "builderWidth" ||
+              id === "builderHeight"
+            ) {
+              element.addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                  generatePreview();
+                }
+              });
+            }
           }
+        });
+
+        // Handle URL format radio buttons
+        const radioButtons = document.querySelectorAll(
+          'input[name="urlFormat"]',
+        );
+        radioButtons.forEach((button) => {
+          button.addEventListener("change", function () {
+            generateUrl();
+          });
         });
       });
 
