@@ -44,8 +44,16 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
     </td>
     <td align="center">
       <img src="media/examples/output.png" width="300" alt="Default Theme"/><br/>
-      <b>Default</b>
+      <b>One Year</b>
     </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="./media/examples/output-rolling-window.png" alt="365-Day Rolling Window" width="300" ><br/>
+      <b>365-Day Rolling Window (Default)</b>
+    </td>
+    <td align="center"></td>
+    <td align="center"></td>
   </tr>
 </table>
 
@@ -57,8 +65,7 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
 - 🖼️ **Customizable**: Dimensions, year selection, credits, themes
 - 🚀 **Minimal**: Lightweight with no framework overhead
 - 💾 **Smart Caching**: Efficient daily caching with instant updates
-- 🎯 **Single Year Focus**: Clean graphs for one year at a time
-- 🐳 **Docker Ready**: Easy deployment on Render, Railway, or any platform
+- 📅 **365-Day Rolling Window**: Default view showing last 365 days of activity
 
 ## Installation
 
@@ -122,15 +129,15 @@ GET /api/graph
 
 ### Query Parameters
 
-| Parameter  | Type    | Required | Default      | Description                                                         |
-| ---------- | ------- | -------- | ------------ | ------------------------------------------------------------------- |
-| `username` | string  | ✅ Yes   | -            | GitHub username                                                     |
-| `year`/`y` | number  | No       | current year | Year to fetch contributions for (supports aliases)                  |
-| `theme`    | string  | No       | `github`     | Visual theme: `github`, `dark`, `light`, `neon`, `minimal`, `ocean` |
-| `width`    | number  | No       | `1000`       | Image width in pixels                                               |
-| `height`   | number  | No       | `600`        | Image height in pixels                                              |
-| `stats`    | boolean | No       | `false`      | Include statistics overlay                                          |
-| `credit`   | boolean | No       | `false`      | Show username credit                                                |
+| Parameter  | Type          | Required | Default           | Description                                                                     |
+| ---------- | ------------- | -------- | ----------------- | ------------------------------------------------------------------------------- |
+| `username` | string        | ✅ Yes   | -                 | GitHub username                                                                 |
+| `year`/`y` | number/string | No       | `none` (365 days) | Year to fetch (e.g., `2025`), or `none` for 365-day rolling window ending today |
+| `theme`    | string        | No       | `github`          | Visual theme: `github`, `dark`, `light`, `neon`, `minimal`, `ocean`             |
+| `width`    | number        | No       | `1000`            | Image width in pixels                                                           |
+| `height`   | number        | No       | `600`             | Image height in pixels                                                          |
+| `stats`    | boolean       | No       | `false`           | Include statistics overlay                                                      |
+| `credit`   | boolean       | No       | `false`           | Show username credit                                                            |
 
 ### API Examples
 
@@ -144,6 +151,12 @@ https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spe
 
 ```
 https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&stats=true
+```
+
+**365-Day Rolling Window (Default):**
+
+```
+https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8
 ```
 
 **Specific Year:**
@@ -170,7 +183,7 @@ https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spe
 https://isometric-contributions-spectrewolf8.onrender.com/api/graph?username=spectrewolf8&year=2025&width=1200&height=700&stats=true&credit=true&theme=neon
 ```
 
-> **Note:** Replace `your-app.onrender.com` with your actual deployment URL. Use `http://localhost:3000` for local testing.
+> **Note:** Use `http://localhost:3000` for local testing.
 
 ### Caching
 

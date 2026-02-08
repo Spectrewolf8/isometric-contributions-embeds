@@ -148,12 +148,25 @@ export function parseContributionsData(apiData, use365Days = false) {
   let startDate = null;
   if (use365Days) {
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const last365Days = new Date(today.getTime() - 364 * 24 * 60 * 60 * 1000);
+    // Ensure we capture the entire current day
+    const endOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+    const last365Days = new Date(
+      endOfToday.getTime() - 364 * 24 * 60 * 60 * 1000,
+    );
     last365Days.setHours(0, 0, 0, 0);
     startDate = last365Days;
 
-    days = days.filter((day) => day.date >= last365Days && day.date <= today);
+    days = days.filter(
+      (day) => day.date >= last365Days && day.date <= endOfToday,
+    );
   }
 
   // Assign week numbers
