@@ -357,11 +357,13 @@ async function handleRequest(req, res) {
   // Analytics API endpoint
   if (url.pathname === "/api/analytics") {
     try {
-      // Fetch both daily and lifetime stats in parallel
-      const [dailyResult, lifetimeResult] = await Promise.all([
-        supabase.rpc("get_daily_stats", { days_back: 30 }),
-        supabase.rpc("get_lifetime_stats"),
-      ]);
+      // Fetch all stats in parallel
+      const [dailyResult, lifetimeResult, dailyNewUsersResult] =
+        await Promise.all([
+          supabase.rpc("get_daily_stats", { days_back: 30 }),
+          supabase.rpc("get_lifetime_stats"),
+          supabase.rpc("get_daily_new_users"),
+        ]);
 
       if (dailyResult.error) {
         console.error("Analytics fetch error:", dailyResult.error);
@@ -371,6 +373,7 @@ async function handleRequest(req, res) {
       const analyticsData = JSON.stringify({
         daily_stats: dailyResult.data || [],
         lifetime_stats: lifetimeResult.data?.[0] || null,
+        daily_new_users: dailyNewUsersResult.data || [],
         updated_at: new Date().toISOString(),
       });
 

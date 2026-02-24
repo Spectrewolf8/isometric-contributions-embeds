@@ -874,8 +874,8 @@
       "
     >
       <button
-        id="tab30days"
-        onclick="switchPeriod('30days')"
+        id="tabMonthly"
+        onclick="switchPeriod('monthly')"
         style="
           padding: 8px 16px;
           border: none;
@@ -886,7 +886,7 @@
           color: var(--heading-primary);
         "
       >
-        Last 30 Days
+        Monthly
       </button>
       <button
         id="tabLifetime"
@@ -904,15 +904,15 @@
       </button>
     </div>
 
-    <!-- 30 Days View -->
-    <div id="view30days">
-      <p>Live usage statistics for the last 30 days:</p>
+    <!-- Monthly View (Current Month) -->
+    <div id="viewMonthly">
+      <p>Usage statistics for the current month:</p>
       <canvas
-        id="analyticsChart"
+        id="monthlyChart"
         style="max-height: 300px; margin: 20px 0"
       ></canvas>
       <div
-        id="analyticsStats"
+        id="monthlyStats"
         style="
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -934,7 +934,7 @@
               font-weight: bold;
               color: var(--heading-primary);
             "
-            id="totalRequests"
+            id="monthlyTotalRequests"
           >
             -
           </div>
@@ -956,12 +956,12 @@
               font-weight: bold;
               color: var(--heading-secondary);
             "
-            id="uniqueUsers"
+            id="monthlyNewUsers"
           >
             -
           </div>
           <div style="color: var(--text-secondary); margin-top: 4px">
-            Avg Daily Users
+            New Users
           </div>
         </div>
         <div
@@ -974,7 +974,7 @@
         >
           <div
             style="font-size: 2em; font-weight: bold; color: #8250df"
-            id="cacheHitRate"
+            id="monthlyCacheHitRate"
           >
             -
           </div>
@@ -1041,7 +1041,7 @@
             -
           </div>
           <div style="color: var(--text-secondary); margin-top: 4px">
-            Unique Users
+            Total Users
           </div>
         </div>
         <div
@@ -1150,7 +1150,7 @@
       // Initialize theme on load
       initTheme();
 
-      let currentPeriod = "30days";
+      let currentPeriod = "monthly";
 
       // Chart configuration for modern minimal look
       const chartConfig = {
@@ -1412,7 +1412,7 @@
         });
       });
 
-      // Switch between 30 days and lifetime views
+      // Switch between monthly and lifetime views
       function switchPeriod(period) {
         currentPeriod = period;
 
@@ -1423,26 +1423,21 @@
           .getPropertyValue("--text-secondary")
           .trim();
 
-        // Update tabs
-        document.getElementById("tab30days").style.borderBottomColor =
-          period === "30days" ? primaryColor : "transparent";
-        document.getElementById("tab30days").style.color =
-          period === "30days" ? primaryColor : secondaryColor;
-        document.getElementById("tab30days").style.fontWeight =
-          period === "30days" ? "600" : "normal";
+        // Update all tabs
+        const tabs = ["tabMonthly", "tabLifetime"];
+        const views = ["viewMonthly", "viewLifetime"];
+        const periods = ["monthly", "lifetime"];
 
-        document.getElementById("tabLifetime").style.borderBottomColor =
-          period === "lifetime" ? primaryColor : "transparent";
-        document.getElementById("tabLifetime").style.color =
-          period === "lifetime" ? primaryColor : secondaryColor;
-        document.getElementById("tabLifetime").style.fontWeight =
-          period === "lifetime" ? "600" : "normal";
-
-        // Update views
-        document.getElementById("view30days").style.display =
-          period === "30days" ? "block" : "none";
-        document.getElementById("viewLifetime").style.display =
-          period === "lifetime" ? "block" : "none";
+        periods.forEach((p, i) => {
+          document.getElementById(tabs[i]).style.borderBottomColor =
+            period === p ? primaryColor : "transparent";
+          document.getElementById(tabs[i]).style.color =
+            period === p ? primaryColor : secondaryColor;
+          document.getElementById(tabs[i]).style.fontWeight =
+            period === p ? "600" : "normal";
+          document.getElementById(views[i]).style.display =
+            period === p ? "block" : "none";
+        });
       }
 
       // Fetch and display analytics
@@ -1461,108 +1456,151 @@
           console.log("Daily stats count:", stats.length);
           console.log("Lifetime stats:", lifetime);
 
-          // Update 30-day stats
-          if (stats.length === 0) {
-            document.getElementById("totalRequests").textContent = "0";
-            document.getElementById("uniqueUsers").textContent = "0";
-            document.getElementById("cacheHitRate").textContent = "0%";
-          } else {
-            const totalRequests = stats.reduce(
+          // Update Monthly (current month) stats and chart
+          {
+            // Filter daily_stats to current month only
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentMonthStats = stats.filter((day) => {
+              const d = new Date(day.date);
+              return (
+                d.getFullYear() === currentYear && d.getMonth() === currentMonth
+              );
+            });
+
+            // Build lookup for daily new users
+            const dailyNewUsersMap = {};
+            (data.daily_new_users || []).forEach((d) => {
+              dailyNewUsersMap[d.date] = parseInt(d.new_users || 0);
+            });
+
+            const monthlyTotalReqs = currentMonthStats.reduce(
               (sum, day) => sum + parseInt(day.total_requests || 0),
               0,
             );
-            const totalCacheHits = stats.reduce(
+            const monthlyTotalCacheHits = currentMonthStats.reduce(
               (sum, day) => sum + parseInt(day.cache_hits || 0),
               0,
             );
-            const cacheHitRate =
-              totalRequests > 0
-                ? ((totalCacheHits / totalRequests) * 100).toFixed(1)
+            const monthlyNewUsersCount = currentMonthStats.reduce(
+              (sum, day) => sum + (dailyNewUsersMap[day.date] || 0),
+              0,
+            );
+            const monthlyCacheRate =
+              monthlyTotalReqs > 0
+                ? ((monthlyTotalCacheHits / monthlyTotalReqs) * 100).toFixed(1)
                 : 0;
 
-            const avgDailyUsers =
-              stats.length > 0
-                ? Math.round(
-                    stats.reduce(
-                      (sum, day) => sum + parseInt(day.unique_users || 0),
-                      0,
-                    ) / stats.length,
-                  )
-                : 0;
+            document.getElementById("monthlyTotalRequests").textContent =
+              monthlyTotalReqs.toLocaleString();
+            document.getElementById("monthlyNewUsers").textContent =
+              monthlyNewUsersCount.toLocaleString();
+            document.getElementById("monthlyCacheHitRate").textContent =
+              monthlyCacheRate + "%";
 
-            document.getElementById("totalRequests").textContent =
-              totalRequests.toLocaleString();
-            document.getElementById("uniqueUsers").textContent =
-              avgDailyUsers.toLocaleString();
-            document.getElementById("cacheHitRate").textContent =
-              cacheHitRate + "%";
+            // Chart: daily breakdown for current month
+            const chartData = [...currentMonthStats].reverse();
+            if (chartData.length > 0) {
+              const labels = chartData.map((day) =>
+                new Date(day.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                }),
+              );
+              const requestData = chartData.map((day) =>
+                parseInt(day.total_requests || 0),
+              );
+              const cacheHitData = chartData.map((day) =>
+                parseInt(day.cache_hits || 0),
+              );
+              const newUserData = chartData.map(
+                (day) => dailyNewUsersMap[day.date] || 0,
+              );
 
-            // Prepare chart data (reverse to show oldest to newest)
-            const chartData = [...stats].reverse();
-            const labels = chartData.map((day) =>
-              new Date(day.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              }),
-            );
-            const requestData = chartData.map((day) =>
-              parseInt(day.total_requests || 0),
-            );
-            const cacheHitData = chartData.map((day) =>
-              parseInt(day.cache_hits || 0),
-            );
+              const monthlyCtx = document
+                .getElementById("monthlyChart")
+                .getContext("2d");
 
-            // Create 30-day chart with modern styling
-            const ctx = document
-              .getElementById("analyticsChart")
-              .getContext("2d");
+              const gradientBlueM = monthlyCtx.createLinearGradient(
+                0,
+                0,
+                0,
+                300,
+              );
+              gradientBlueM.addColorStop(0, "rgba(9, 105, 218, 0.2)");
+              gradientBlueM.addColorStop(1, "rgba(9, 105, 218, 0.01)");
 
-            // Create gradients
-            const gradientBlue = ctx.createLinearGradient(0, 0, 0, 300);
-            gradientBlue.addColorStop(0, "rgba(9, 105, 218, 0.2)");
-            gradientBlue.addColorStop(1, "rgba(9, 105, 218, 0.01)");
+              const gradientGreenM = monthlyCtx.createLinearGradient(
+                0,
+                0,
+                0,
+                300,
+              );
+              gradientGreenM.addColorStop(0, "rgba(26, 127, 55, 0.2)");
+              gradientGreenM.addColorStop(1, "rgba(26, 127, 55, 0.01)");
 
-            const gradientGreen = ctx.createLinearGradient(0, 0, 0, 300);
-            gradientGreen.addColorStop(0, "rgba(26, 127, 55, 0.2)");
-            gradientGreen.addColorStop(1, "rgba(26, 127, 55, 0.01)");
+              const gradientPurpleM = monthlyCtx.createLinearGradient(
+                0,
+                0,
+                0,
+                300,
+              );
+              gradientPurpleM.addColorStop(0, "rgba(130, 80, 223, 0.2)");
+              gradientPurpleM.addColorStop(1, "rgba(130, 80, 223, 0.01)");
 
-            new Chart(ctx, {
-              type: "line",
-              data: {
-                labels: labels,
-                datasets: [
-                  {
-                    label: "Total Requests",
-                    data: requestData,
-                    borderColor: "#0969da",
-                    backgroundColor: gradientBlue,
-                    borderWidth: 2.5,
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: "#0969da",
-                    pointHoverBorderColor: "#fff",
-                    pointHoverBorderWidth: 2,
-                  },
-                  {
-                    label: "Cache Hits",
-                    data: cacheHitData,
-                    borderColor: "#1a7f37",
-                    backgroundColor: gradientGreen,
-                    borderWidth: 2.5,
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: "#1a7f37",
-                    pointHoverBorderColor: "#fff",
-                    pointHoverBorderWidth: 2,
-                  },
-                ],
-              },
-              options: chartConfig,
-            });
+              new Chart(monthlyCtx, {
+                type: "line",
+                data: {
+                  labels: labels,
+                  datasets: [
+                    {
+                      label: "Total Requests",
+                      data: requestData,
+                      borderColor: "#0969da",
+                      backgroundColor: gradientBlueM,
+                      borderWidth: 2.5,
+                      tension: 0.4,
+                      fill: true,
+                      pointRadius: 0,
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#0969da",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                    },
+                    {
+                      label: "Cache Hits",
+                      data: cacheHitData,
+                      borderColor: "#1a7f37",
+                      backgroundColor: gradientGreenM,
+                      borderWidth: 2.5,
+                      tension: 0.4,
+                      fill: true,
+                      pointRadius: 0,
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#1a7f37",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                    },
+                    {
+                      label: "New Users",
+                      data: newUserData,
+                      borderColor: "#8250df",
+                      backgroundColor: gradientPurpleM,
+                      borderWidth: 2.5,
+                      tension: 0.4,
+                      fill: true,
+                      pointRadius: 0,
+                      pointHoverRadius: 6,
+                      pointHoverBackgroundColor: "#8250df",
+                      pointHoverBorderColor: "#fff",
+                      pointHoverBorderWidth: 2,
+                    },
+                  ],
+                },
+                options: chartConfig,
+              });
+            }
           }
 
           // Update lifetime stats and chart
@@ -1591,15 +1629,22 @@
                 });
             }
 
-            // Create lifetime chart with aggregated daily data
+            // Create lifetime chart with daily data + new users from daily_new_users
             const lifetimeCtx = document
               .getElementById("lifetimeChart")
               .getContext("2d");
 
-            // Use all available daily stats for lifetime chart (make a copy to avoid mutation)
+            // Use all available daily stats for lifetime chart
             const allStats = [...(data.daily_stats || [])];
+            // Build a lookup map for daily new users (first-time users per day)
+            const dailyNewUsersMap = {};
+            (data.daily_new_users || []).forEach((d) => {
+              dailyNewUsersMap[d.date] = parseInt(d.new_users || 0);
+            });
+
             if (allStats.length > 0) {
-              const lifetimeLabels = allStats.reverse().map((day) =>
+              allStats.reverse();
+              const lifetimeLabels = allStats.map((day) =>
                 new Date(day.date).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -1611,8 +1656,9 @@
               const lifetimeCacheData = allStats.map((day) =>
                 parseInt(day.cache_hits || 0),
               );
-              const lifetimeUniqueData = allStats.map((day) =>
-                parseInt(day.unique_users || 0),
+              // Use daily_new_users data (first-time users) instead of daily unique_users
+              const lifetimeNewUserData = allStats.map(
+                (day) => dailyNewUsersMap[day.date] || 0,
               );
 
               // Create gradients for lifetime chart
@@ -1677,8 +1723,8 @@
                       pointHoverBorderWidth: 2,
                     },
                     {
-                      label: "Unique Users",
-                      data: lifetimeUniqueData,
+                      label: "New Users",
+                      data: lifetimeNewUserData,
                       borderColor: "#1a7f37",
                       backgroundColor: gradientTeal,
                       borderWidth: 2.5,

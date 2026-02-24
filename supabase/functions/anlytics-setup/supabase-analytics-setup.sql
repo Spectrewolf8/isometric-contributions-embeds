@@ -128,11 +128,74 @@ AS $$
   FROM public.api_analytics;
 $$;
 
+-- Function to get new (first-time) users per day
+-- Returns only users whose FIRST EVER request was on that day
+CREATE OR REPLACE FUNCTION get_daily_new_users()
+RETURNS TABLE(
+  date DATE,
+  new_users BIGINT
+)
+LANGUAGE SQL
+STABLE
+AS $$
+  SELECT DATE(first_seen) as date, COUNT(*) as new_users
+  FROM (
+    SELECT username, MIN(DATE(created_at)) as first_seen
+    FROM public.api_analytics
+    GROUP BY username
+  ) sub
+  GROUP BY DATE(first_seen)
+  ORDER BY date DESC;
+$$;
+
+-- Function to get monthly aggregated stats
+CREATE OR REPLACE FUNCTION get_monthly_stats()
+RETURNS TABLE(
+  month DATE,
+  total_requests BIGINT,
+  unique_users BIGINT,
+  cache_hits BIGINT
+)
+LANGUAGE SQL
+STABLE
+AS $$
+  SELECT
+    DATE_TRUNC('month', created_at)::DATE as month,
+    COUNT(*) as total_requests,
+    COUNT(DISTINCT username) as unique_users,
+    COUNT(*) FILTER (WHERE cache_hit = true) as cache_hits
+  FROM public.api_analytics
+  GROUP BY DATE_TRUNC('month', created_at)
+  ORDER BY month DESC;
+$$;
+
+-- Function to get new (first-time) users per month
+CREATE OR REPLACE FUNCTION get_monthly_new_users()
+RETURNS TABLE(
+  month DATE,
+  new_users BIGINT
+)
+LANGUAGE SQL
+STABLE
+AS $$
+  SELECT DATE_TRUNC('month', first_seen)::DATE as month, COUNT(*) as new_users
+  FROM (
+    SELECT username, MIN(DATE(created_at)) as first_seen
+    FROM public.api_analytics
+    GROUP BY username
+  ) sub
+  GROUP BY DATE_TRUNC('month', first_seen)
+  ORDER BY month DESC;
+$$;
+
 -- Grant execute permissions on functions
 GRANT EXECUTE ON FUNCTION get_daily_stats(INTEGER) TO anon;
 GRANT EXECUTE ON FUNCTION get_theme_stats() TO anon;
 GRANT EXECUTE ON FUNCTION get_top_users(INTEGER) TO anon;
 GRANT EXECUTE ON FUNCTION get_lifetime_stats() TO anon;
+GRANT EXECUTE ON FUNCTION get_daily_new_users() TO anon;
+GRANT EXECUTE ON FUNCTION get_monthly_stats() TO anon;
+GRANT EXECUTE ON FUNCTION get_monthly_new_users() TO anon;
 
 -- Verify setup
 SELECT 'Analytics setup complete!' as status;
