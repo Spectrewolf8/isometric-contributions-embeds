@@ -156,18 +156,26 @@ export function renderIsometricChart(days, options = {}) {
     }, {}),
   );
 
-  // Position graph with proper centering that scales with canvas size
-  // Original position for 1000x600 was (130, 90) which provided good visual balance
-  // Use proportional positioning: 13% from left, 15% from top
+  // Calculate proper offsets so the tallest cube never gets clipped at top.
+  // obelisk projection: screen_y_top = floor(x3d/2 + y3d/2) - cubeHeight + offsetY
+  // The worst case (min screen_y_top) is week 0 / day 0 at maximum height.
+  const GH_OFFSET_base = 14 * cubeScale;
+  const x3d_first = cubeSize * (GH_OFFSET_base / (GH_OFFSET_base + 1));
+  const actualMaxCubeHeight =
+    Math.round(3 * cubeScale) + (maxCount > 0 ? Math.round(maxHeight) : 0);
+  const topMargin = Math.round(8 * cubeScale);
+  const minOffsetY =
+    topMargin + actualMaxCubeHeight - Math.floor(x3d_first / 2);
+
   const offsetX = width * 0.13;
-  const offsetY = height * 0.15;
+  const offsetY = Math.max(height * 0.15, minOffsetY);
 
   // Setup obelisk with scaled position
   const point = new obelisk.Point(offsetX, offsetY);
   const pixelView = new obelisk.PixelView(canvas, point);
 
   // Scale the offsets to match cube size scaling
-  const GH_OFFSET = 14 * cubeScale;
+  const GH_OFFSET = GH_OFFSET_base;
   const DAY_OFFSET = 13 * cubeScale;
   let transform = GH_OFFSET;
 
