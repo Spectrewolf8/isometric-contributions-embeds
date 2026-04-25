@@ -233,7 +233,19 @@ async function generateGraph(params) {
     : renderIsometricChart(days, renderOptions);
 
   // Export to PNG buffer
-  return exportToPNG(canvas);
+  const buffer = exportToPNG(canvas);
+
+  // Warn if data seems incomplete (likely due to API partial failure).
+  // For 365-day mode we expect ~365 days; flag if we got less than 180.
+  // This result is still returned but the caller can skip caching it.
+  const isLikelyIncomplete = use365Days && days.length < 180;
+  if (isLikelyIncomplete) {
+    console.warn(
+      `[WARN] ${username}: only ${days.length} days fetched for 365-day mode — skipping cache to avoid storing partial graph`,
+    );
+  }
+
+  return { buffer, isLikelyIncomplete };
 }
 
 /**
@@ -330,21 +342,25 @@ async function handleRequest(req, res) {
 
       // Generate new graph
       console.log(`[CACHE MISS] ${params.username} - Generating new graph...`);
-      const imageBuffer = await generateGraph(params);
+      const { buffer: imageBuffer, isLikelyIncomplete } =
+        await generateGraph(params);
 
       // Track analytics (don't wait)
       trackAnalytics(params, false).catch((err) =>
         console.error("Analytics error:", err),
       );
 
-      // Save to Supabase cache (don't wait)
-      cacheImage(cacheKey, imageBuffer)
-        .then(() =>
-          console.log(`[CACHED] ${params.username} - Saved to Supabase`),
-        )
-        .catch((err) =>
-          console.error(`[CACHE ERROR] ${params.username}:`, err),
-        );
+      // Only cache complete graphs — skip caching if data seems partial
+      // to prevent a broken image from being served all day from cache.
+      if (!isLikelyIncomplete) {
+        cacheImage(cacheKey, imageBuffer)
+          .then(() =>
+            console.log(`[CACHED] ${params.username} - Saved to Supabase`),
+          )
+          .catch((err) =>
+            console.error(`[CACHE ERROR] ${params.username}:`, err),
+          );
+      }
 
       // Send response
       return sendPNGResponse(res, imageBuffer, false);
@@ -421,9 +437,37 @@ async function handleRequest(req, res) {
 }
 
 // Create server
+async function verifyGitHubAPI() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    console.error("  ✗ GITHUB_TOKEN not set — API will not work\n");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers: {
+        Authorization: `bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: "{ viewer { login } }" }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.errors) throw new Error(json.errors[0].message);
+
+    const login = json?.data?.viewer?.login ?? "unknown";
+    console.log(`GitHub API authenticated as @${login}\n`);
+  } catch (err) {
+    console.error(`GitHub API check failed: ${err.message}\n`);
+  }
+}
+
 const server = createServer(handleRequest);
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`
   🎨 Isometric Contributions API Server                     
   Status:     Running                                       
@@ -438,7 +482,7 @@ server.listen(PORT, () => {
 
   `);
   console.log("Press Ctrl+C to stop the server\n");
-  console.log("💡 Cache cleanup runs automatically via cron job\n");
+  await verifyGitHubAPI();
 });
 
 // Graceful shutdown
