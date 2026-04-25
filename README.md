@@ -73,6 +73,18 @@ Generate beautiful 3D isometric visualizations of GitHub contribution graphs. Av
 npm install
 ```
 
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+GITHUB_TOKEN=your_github_personal_access_token
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+> **`GITHUB_TOKEN`**: A [GitHub personal access token](https://github.com/settings/tokens) is required. No scopes are needed for public contribution data — a classic token with no scopes selected works fine.
+
 ## Quick Start
 
 ### CLI Usage
@@ -459,7 +471,7 @@ The cleanup script outputs logs:
 This project builds upon the excellent work of:
 
 - **Core Renderer**: Based on [isometric-contributions](https://github.com/jasonlong/isometric-contributions) by Jason Long - the foundational isometric rendering logic was taken and modified for this implementation
-- **Contributions API**: Uses the [GitHub Contributions API](https://github.com/grubersjoe/github-contributions-api) by Joe Gruber - an unofficial but reliable API for fetching GitHub contribution data
+- **GitHub GraphQL API**: Contribution data is fetched directly from GitHub's official GraphQL API using a personal access token — no third-party services required
 
 ## Contributing
 

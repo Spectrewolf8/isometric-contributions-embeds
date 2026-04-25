@@ -1458,14 +1458,17 @@
 
           // Update Monthly (current month) stats and chart
           {
-            // Filter daily_stats to current month only
+            // Dates from the API are "YYYY-MM-DD" strings, which parse as UTC
+            // midnight. Use UTC accessors throughout so timezone offset can't
+            // shift a date into the wrong month.
             const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
+            const currentYear = now.getUTCFullYear();
+            const currentMonth = now.getUTCMonth();
             const currentMonthStats = stats.filter((day) => {
               const d = new Date(day.date);
               return (
-                d.getFullYear() === currentYear && d.getMonth() === currentMonth
+                d.getUTCFullYear() === currentYear &&
+                d.getUTCMonth() === currentMonth
               );
             });
 
