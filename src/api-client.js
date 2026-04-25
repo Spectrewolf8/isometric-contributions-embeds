@@ -66,7 +66,7 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
 async function fetchGitHubGraphQL(token, username, from, to) {
   const fromStr = from.toISOString().slice(0, 10);
   const toStr = to.toISOString().slice(0, 10);
-  console.log(`  → GitHub API: ${username} (${fromStr} to ${toStr})`);
+  console.log(`[GH]    ${username} — fetching ${fromStr} to ${toStr}`);
 
   const response = await fetchWithRetry(GITHUB_GRAPHQL_API, {
     method: "POST",
@@ -117,7 +117,7 @@ async function fetchGitHubGraphQL(token, username, from, to) {
   }
 
   const total = calendar.totalContributions;
-  console.log(`  ← ${days.length} days, ${total} contributions`);
+  console.log(`[GH]    ${username} — ${days.length} days, ${total} total contributions`);
   return days;
 }
 

@@ -202,16 +202,9 @@ async function generateGraph(params) {
   const use365Days = year === "none";
   const yearDisplay = use365Days ? "365-day history" : `year: ${year}`;
 
-  // Fetch contribution data
-  console.log(
-    `[FETCH] Fetching contributions for ${username} (${yearDisplay})...`,
-  );
   const data = await fetchContributions(username, year);
-
-  console.log(`[PARSE] Parsing contribution data...`);
   const days = parseContributionsData(data, use365Days);
-
-  console.log(`[RESULT] Parsed ${days.length} days of contribution data`);
+  console.log(`[DATA]  ${username} — ${days.length} days (${yearDisplay})`);
 
   if (days.length === 0) {
     const periodText = use365Days ? "past 365 days" : `year ${year}`;
@@ -241,7 +234,7 @@ async function generateGraph(params) {
   const isLikelyIncomplete = use365Days && days.length < 180;
   if (isLikelyIncomplete) {
     console.warn(
-      `[WARN] ${username}: only ${days.length} days fetched for 365-day mode — skipping cache to avoid storing partial graph`,
+      `[WARN]  ${username} — only ${days.length}/365 days returned, skipping cache`,
     );
   }
 
@@ -326,13 +319,17 @@ async function handleRequest(req, res) {
         );
       }
 
+      const { username, year, theme, width, height, stats, credit } = params;
+      const paramsLog = `theme=${theme} year=${year} size=${width}x${height} stats=${stats} credit=${credit}`;
+      console.log(`[REQ]   ${username} — ${paramsLog}`);
+
       // Generate cache key
       const cacheKey = getCacheKey(params.username, params);
 
       // Check cache
       const cachedImage = await getCachedImage(cacheKey);
       if (cachedImage) {
-        console.log(`[CACHE HIT] ${params.username} - Serving from Supabase`);
+        console.log(`[HIT]   ${username} — served from cache`);
         // Track analytics (don't wait)
         trackAnalytics(params, true).catch((err) =>
           console.error("Analytics error:", err),
@@ -341,7 +338,7 @@ async function handleRequest(req, res) {
       }
 
       // Generate new graph
-      console.log(`[CACHE MISS] ${params.username} - Generating new graph...`);
+      console.log(`[MISS]  ${username} — generating new graph`);
       const { buffer: imageBuffer, isLikelyIncomplete } =
         await generateGraph(params);
 
@@ -355,18 +352,25 @@ async function handleRequest(req, res) {
       if (!isLikelyIncomplete) {
         cacheImage(cacheKey, imageBuffer)
           .then(() =>
-            console.log(`[CACHED] ${params.username} - Saved to Supabase`),
+            console.log(`[SAVE]  ${params.username} — cached to Supabase`),
           )
           .catch((err) =>
-            console.error(`[CACHE ERROR] ${params.username}:`, err),
+            console.error(
+              `[ERROR] ${params.username} — cache save failed:`,
+              err,
+            ),
           );
       }
 
       // Send response
       return sendPNGResponse(res, imageBuffer, false);
     } catch (error) {
-      console.error("Error:", error);
-      return sendErrorResponse(res, 500, error.message);
+      const isNotFound =
+        error.message.includes("Could not resolve to a User") ||
+        error.message.includes("not found");
+      const statusCode = isNotFound ? 404 : 500;
+      console.error(`[ERROR] ${statusCode} — ${error.message}`);
+      return sendErrorResponse(res, statusCode, error.message);
     }
   }
 
@@ -459,9 +463,9 @@ async function verifyGitHubAPI() {
     if (json.errors) throw new Error(json.errors[0].message);
 
     const login = json?.data?.viewer?.login ?? "unknown";
-    console.log(`GitHub API authenticated as @${login}\n`);
+    console.log(`[GH]    GitHub authenticated as @${login}\n`);
   } catch (err) {
-    console.error(`GitHub API check failed: ${err.message}\n`);
+    console.error(`[ERROR] GitHub API check failed: ${err.message}\n`);
   }
 }
 
