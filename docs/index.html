@@ -1189,6 +1189,10 @@
             },
             borderColor: "rgba(208, 215, 222, 0.3)",
             borderWidth: 1,
+            callbacks: {
+              label: (ctx) =>
+                ` ${ctx.dataset.label}: ${Math.round(ctx.parsed.y)}`,
+            },
           },
         },
         scales: {
@@ -1656,15 +1660,29 @@
                   day: "numeric",
                 }),
               );
-              const lifetimeRequestData = allStats.map((day) =>
-                parseInt(day.total_requests || 0),
+              // Smooth out day-to-day noise with a trailing moving average —
+              // raw daily counts over months of history look jagged/spiky.
+              const movingAverage = (values, windowSize) =>
+                values.map((_, i) => {
+                  const start = Math.max(0, i - windowSize + 1);
+                  const window = values.slice(start, i + 1);
+                  const sum = window.reduce((a, b) => a + b, 0);
+                  return sum / window.length;
+                });
+              const smoothingWindow = allStats.length > 14 ? 14 : 1;
+
+              const lifetimeRequestData = movingAverage(
+                allStats.map((day) => parseInt(day.total_requests || 0)),
+                smoothingWindow,
               );
-              const lifetimeCacheData = allStats.map((day) =>
-                parseInt(day.cache_hits || 0),
+              const lifetimeCacheData = movingAverage(
+                allStats.map((day) => parseInt(day.cache_hits || 0)),
+                smoothingWindow,
               );
               // Use daily_new_users data (first-time users) instead of daily unique_users
-              const lifetimeNewUserData = allStats.map(
-                (day) => dailyNewUsersMap[day.date] || 0,
+              const lifetimeNewUserData = movingAverage(
+                allStats.map((day) => dailyNewUsersMap[day.date] || 0),
+                smoothingWindow,
               );
 
               // Create gradients for lifetime chart
