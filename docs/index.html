@@ -1637,8 +1637,11 @@
               .getElementById("lifetimeChart")
               .getContext("2d");
 
-            // Use all available daily stats for lifetime chart
-            const allStats = [...(data.daily_stats || [])];
+            // Use the full-history daily series for the lifetime chart
+            // (falls back to daily_stats if the lifetime series is absent).
+            const allStats = [
+              ...(data.daily_stats_lifetime || data.daily_stats || []),
+            ];
             // Build a lookup map for daily new users (first-time users per day)
             const dailyNewUsersMap = {};
             (data.daily_new_users || []).forEach((d) => {

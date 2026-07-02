@@ -65,6 +65,27 @@ AS $$
   ORDER BY date DESC;
 $$;
 
+-- Function to get daily stats for the entire app lifetime (no day limit)
+CREATE OR REPLACE FUNCTION get_lifetime_daily_stats()
+RETURNS TABLE(
+  date DATE,
+  total_requests BIGINT,
+  unique_users BIGINT,
+  cache_hits BIGINT
+)
+LANGUAGE SQL
+STABLE
+AS $$
+  SELECT
+    DATE(created_at) as date,
+    COUNT(*) as total_requests,
+    COUNT(DISTINCT username) as unique_users,
+    COUNT(*) FILTER (WHERE cache_hit = true) as cache_hits
+  FROM public.api_analytics
+  GROUP BY DATE(created_at)
+  ORDER BY date DESC;
+$$;
+
 -- Function to get theme usage stats
 CREATE OR REPLACE FUNCTION get_theme_stats()
 RETURNS TABLE(
@@ -190,6 +211,7 @@ $$;
 
 -- Grant execute permissions on functions
 GRANT EXECUTE ON FUNCTION get_daily_stats(INTEGER) TO anon;
+GRANT EXECUTE ON FUNCTION get_lifetime_daily_stats() TO anon;
 GRANT EXECUTE ON FUNCTION get_theme_stats() TO anon;
 GRANT EXECUTE ON FUNCTION get_top_users(INTEGER) TO anon;
 GRANT EXECUTE ON FUNCTION get_lifetime_stats() TO anon;
