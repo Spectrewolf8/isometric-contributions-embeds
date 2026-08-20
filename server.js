@@ -64,9 +64,15 @@ const supabase = createClient(
  */
 function getCacheKey(username, params) {
   const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const paramsStr = JSON.stringify(params);
+  // GitHub logins are case-insensitive, so normalize before building the key.
+  // This dedupes the cache so e.g. "Riteshp2001" and "riteshp2001" resolve to
+  // one stored PNG instead of generating and storing a copy per casing.
+  // The username must also be normalized inside the hashed params, otherwise
+  // the hash segment would still differ by case.
+  const normalizedUsername = (username || "").toLowerCase();
+  const paramsStr = JSON.stringify({ ...params, username: normalizedUsername });
   const hash = Buffer.from(paramsStr).toString("base64").replace(/[/+=]/g, "");
-  return `daily/${date}/${username}/${hash}.png`;
+  return `daily/${date}/${normalizedUsername}/${hash}.png`;
 }
 
 /**
@@ -131,8 +137,11 @@ async function trackAnalytics(params, cacheHit) {
       year = parseInt(params.year, 10);
     }
 
+    // GitHub usernames are case-insensitive, so normalize to lowercase before
+    // storing. This keeps analytics (unique users, top users) from counting
+    // e.g. "Riteshp2001" and "riteshp2001" as two different people.
     const { error } = await supabase.from("api_analytics").insert({
-      username: params.username,
+      username: (params.username || "").toLowerCase(),
       theme: params.theme || "github",
       width: params.width || 1000,
       height: params.height || 600,
